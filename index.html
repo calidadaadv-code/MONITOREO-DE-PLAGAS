@@ -8,6 +8,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
 <style>
   :root{
     --teal-deep:   #123B4D;
@@ -193,6 +194,8 @@
     border:1.6px solid rgba(20,33,28,0.22); color:transparent;
   }
   .trap-row.is-done .trap-check{ background:var(--leaf); border-color:var(--leaf); color:#fff; }
+  .trap-row.has-draft{ border:1.6px solid #D9A441; box-shadow:0 8px 18px -12px rgba(0,0,0,0.45), 0 0 0 1px rgba(217,164,65,0.15) inset; }
+  .trap-row.has-draft .trap-sub{ color:#8A5A20; font-weight:600; }
   .trap-check svg{ width:13px; height:13px; }
 
   /* ---------- Sheet (formulario de ingreso) ---------- */
@@ -271,6 +274,7 @@
     cursor:pointer; transition:transform 0.12s ease;
   }
   .cambio-row:active{ transform:scale(0.98); }
+  .cambio-row.has-draft{ border:1.6px solid #D9A441; box-shadow:0 8px 18px -12px rgba(0,0,0,0.45), 0 0 0 1px rgba(217,164,65,0.15) inset; }
   .cambio-info{ flex:1; min-width:0; }
   .cambio-title{ margin:0; font-size:13.5px; font-weight:600; color:var(--ink); }
   .cambio-sub{ margin:2px 0 0; font-size:11.5px; color:var(--ink-soft); }
@@ -696,6 +700,55 @@
     window.scrollTo(0,0);
   }
 
+  // ---- Conexión a Supabase ----
+  var SUPABASE_URL = 'https://qmxcjbyqeazaeionpfli.supabase.co';
+  var SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFteGNqYnlxZWF6YWVpb25wZmxpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODAzMjM4MTIsImV4cCI6MjA5NTg5OTgxMn0.amhvn_ALkKYQAt741zfNYnc447idKv-WNqbM-BUvLTw';
+  var sb = (window.supabase && window.supabase.createClient)
+    ? window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY)
+    : null;
+  var BUCKET_FOTOS = 'fotos-trampas';
+
+  function cargarDatosDesdeSupabase(){
+    if(!sb) return;
+    var hoy = todayStr();
+
+    sb.from('ofm_monitoreos')
+      .select('*')
+      .eq('fecha', hoy)
+      .order('created_at', {ascending:false})
+      .then(function(res){
+        if(res.error){ console.warn('Error cargando monitoreos:', res.error.message); return; }
+        (res.data || []).forEach(function(row){
+          if(!REGISTROS[row.trampa_num]){ // solo la más reciente (ya viene ordenado desc)
+            REGISTROS[row.trampa_num] = {
+              monitor: row.monitor,
+              fecha: row.fecha,
+              cantidad: row.cantidad,
+              foto: row.foto_url,
+              obs: row.observaciones
+            };
+          }
+        });
+      });
+
+    sb.from('ofm_cambios')
+      .select('*')
+      .order('created_at', {ascending:false})
+      .then(function(res){
+        if(res.error){ console.warn('Error cargando cambios:', res.error.message); return; }
+        (res.data || []).forEach(function(row){
+          if(!CAMBIOS[row.trampa_num]){ // solo la más reciente por trampa
+            CAMBIOS[row.trampa_num] = {
+              postura: row.fecha_postura,
+              obs: row.observacion
+            };
+          }
+        });
+      });
+  }
+
+  window.addEventListener('load', cargarDatosDesdeSupabase);
+
   // ---- Datos de trampas OFM (transcritos desde la tabla enviada; verificar contra el Excel original) ----
   function dms(d,m,s,dir){
     var dec = d + m/60 + s/3600;
@@ -766,11 +819,13 @@
 
     var listaHtml = trampas.map(function(t){
       var done = !!REGISTROS[t.num];
-      return '<div class="trap-row' + (done ? ' is-done' : '') + '" onclick="openForm(' + t.num + ')">' +
+      var draft = !!cargarBorrador('m', t.num);
+      var claseExtra = draft ? ' has-draft' : (done ? ' is-done' : '');
+      return '<div class="trap-row' + claseExtra + '" onclick="openForm(' + t.num + ')">' +
         '<span class="trap-num">N°' + t.num + '</span>' +
         '<span class="trap-info">' +
           '<p class="trap-title">Cuartel ' + t.cuartel + ' · ' + t.especie + ' ' + t.variedad + '</p>' +
-          '<p class="trap-sub">' + t.lat.toFixed(5) + ', ' + t.lon.toFixed(5) + '</p>' +
+          '<p class="trap-sub">' + (draft ? 'Borrador sin guardar' : (t.lat.toFixed(5) + ', ' + t.lon.toFixed(5))) + '</p>' +
         '</span>' +
         '<span class="trap-check"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></span>' +
       '</div>';
@@ -826,15 +881,67 @@
   }
 
   // ---- Formulario de ingreso por trampa ----
+  // ---- Borradores locales (para no perder datos si sale sin guardar) ----
   var REGISTROS = {};
+  function claveBorrador(tipo, num){
+    return 'plagas_borrador_' + tipo + '_' + num;
+  }
+
+  function guardarBorrador(tipo, num, datos){
+    try{
+      localStorage.setItem(claveBorrador(tipo, num), JSON.stringify(datos));
+    } catch(e){ /* almacenamiento lleno o no disponible: se ignora, no es crítico */ }
+  }
+
+  function cargarBorrador(tipo, num){
+    try{
+      var raw = localStorage.getItem(claveBorrador(tipo, num));
+      return raw ? JSON.parse(raw) : null;
+    } catch(e){ return null; }
+  }
+
+  function borrarBorrador(tipo, num){
+    try{ localStorage.removeItem(claveBorrador(tipo, num)); } catch(e){}
+  }
+
+  function guardarBorradorMonitoreoActual(){
+    if(!formTrampaActual) return;
+    guardarBorrador('m', formTrampaActual.num, {
+      monitorSel: document.getElementById('f-monitor').value,
+      monitorOtro: document.getElementById('f-monitor-otro').value,
+      fecha: document.getElementById('f-fecha').value,
+      cantidad: document.getElementById('f-cantidad').value,
+      obs: document.getElementById('f-obs').value,
+      foto: fotoActualDataUrl
+    });
+  }
+
+  function guardarBorradorCambioActual(){
+    if(!formCambioTrampaActual) return;
+    guardarBorrador('c', formCambioTrampaActual.num, {
+      fecha: document.getElementById('f2-fecha').value,
+      obs: document.getElementById('f2-obs').value
+    });
+  }
+
+  ['f-monitor','f-monitor-otro','f-fecha','f-cantidad','f-obs'].forEach(function(id){
+    var el = document.getElementById(id);
+    if(el){ el.addEventListener('input', guardarBorradorMonitoreoActual); el.addEventListener('change', guardarBorradorMonitoreoActual); }
+  });
+  ['f2-fecha','f2-obs'].forEach(function(id){
+    var el = document.getElementById(id);
+    if(el){ el.addEventListener('input', guardarBorradorCambioActual); el.addEventListener('change', guardarBorradorCambioActual); }
+  });
   var CAMBIOS = {};
   var formTrampaActual = null;
   var formCambioTrampaActual = null;
   var fotoActualDataUrl = null;
+  var fotoActualFile = null;
 
   function onFotoSeleccionada(evt){
     var file = evt.target.files && evt.target.files[0];
     if(!file) return;
+    fotoActualFile = file;
     var reader = new FileReader();
     reader.onload = function(e){
       fotoActualDataUrl = e.target.result;
@@ -846,6 +953,7 @@
 
   function quitarFoto(){
     fotoActualDataUrl = null;
+    fotoActualFile = null;
     document.getElementById('f-foto').value = '';
     document.getElementById('f-foto-preview-wrap').style.display = 'none';
   }
@@ -887,8 +995,14 @@
     document.getElementById('form2-sub').textContent = t.campo + ' · Cuartel ' + t.cuartel + ' · ' + t.especie + ' ' + t.variedad;
 
     var prev = CAMBIOS[num];
-    document.getElementById('f2-fecha').value = prev ? prev.postura : '';
-    document.getElementById('f2-obs').value = prev ? prev.obs : '';
+    var borrador = cargarBorrador('c', num);
+    if(borrador){
+      document.getElementById('f2-fecha').value = borrador.fecha || '';
+      document.getElementById('f2-obs').value = borrador.obs || '';
+    } else {
+      document.getElementById('f2-fecha').value = prev ? prev.postura : '';
+      document.getElementById('f2-obs').value = prev ? prev.obs : '';
+    }
     actualizarProximoCambio2();
 
     document.getElementById('sheet-cambio-overlay').classList.add('is-open');
@@ -900,12 +1014,41 @@
 
   function saveFormCambio(){
     if(!formCambioTrampaActual) return;
-    CAMBIOS[formCambioTrampaActual.num] = {
-      postura: document.getElementById('f2-fecha').value,
-      obs: document.getElementById('f2-obs').value
-    };
-    closeFormCambio();
-    showCambioTrampas();
+    var t = formCambioTrampaActual;
+    var postura = document.getElementById('f2-fecha').value;
+    var obs = document.getElementById('f2-obs').value;
+    var btn = document.querySelector('#sheet-cambio-overlay .btn-save');
+    var textoOriginal = btn.textContent;
+    btn.textContent = 'Guardando…';
+    btn.disabled = true;
+
+    CAMBIOS[t.num] = { postura: postura, obs: obs };
+
+    if(sb){
+      sb.from('ofm_cambios').insert({
+        trampa_num: t.num,
+        campo: t.campo,
+        cuartel: t.cuartel,
+        fecha_postura: postura || null,
+        observacion: obs || null
+      }).then(function(res){
+        btn.textContent = textoOriginal;
+        btn.disabled = false;
+        if(res.error){
+          alert('No se pudo guardar en Supabase: ' + res.error.message);
+        } else {
+          borrarBorrador('c', t.num);
+        }
+        closeFormCambio();
+        showCambioTrampas();
+      });
+    } else {
+      btn.textContent = textoOriginal;
+      btn.disabled = false;
+      borrarBorrador('c', t.num);
+      closeFormCambio();
+      showCambioTrampas();
+    }
   }
 
   function toggleMonitorOtro(){
@@ -922,7 +1065,33 @@
     document.getElementById('form-sub').textContent = t.campo + ' · Cuartel ' + t.cuartel + ' · ' + t.especie + ' ' + t.variedad;
 
     var prev = REGISTROS[num];
+    var borrador = cargarBorrador('m', num);
     var monitorSel = document.getElementById('f-monitor');
+
+    if(borrador){
+      monitorSel.value = borrador.monitorSel || 'Paola Riquelme';
+      document.getElementById('f-monitor-otro').value = borrador.monitorOtro || '';
+      toggleMonitorOtro();
+
+      document.getElementById('f-fecha').value = borrador.fecha || todayStr();
+      document.getElementById('f-cantidad').value = borrador.cantidad || '';
+      document.getElementById('f-obs').value = borrador.obs || '';
+
+      document.getElementById('f-foto').value = '';
+      fotoActualFile = null;
+      if(borrador.foto){
+        fotoActualDataUrl = borrador.foto;
+        document.getElementById('f-foto-preview').src = borrador.foto;
+        document.getElementById('f-foto-preview-wrap').style.display = 'flex';
+      } else {
+        fotoActualDataUrl = null;
+        document.getElementById('f-foto-preview-wrap').style.display = 'none';
+      }
+
+      document.getElementById('sheet-overlay').classList.add('is-open');
+      return;
+    }
+
     if(prev && prev.monitor && prev.monitor !== 'Paola Riquelme'){
       monitorSel.value = '__otro__';
       document.getElementById('f-monitor-otro').value = prev.monitor;
@@ -937,6 +1106,7 @@
     document.getElementById('f-obs').value = prev ? prev.obs : '';
 
     document.getElementById('f-foto').value = '';
+    fotoActualFile = null;
     if(prev && prev.foto){
       fotoActualDataUrl = prev.foto;
       document.getElementById('f-foto-preview').src = prev.foto;
@@ -955,19 +1125,75 @@
 
   function saveForm(){
     if(!formTrampaActual) return;
+    var t = formTrampaActual;
     var monitorSel = document.getElementById('f-monitor').value;
     var monitorNombre = (monitorSel === '__otro__')
       ? document.getElementById('f-monitor-otro').value
       : monitorSel;
-    REGISTROS[formTrampaActual.num] = {
-      monitor: monitorNombre,
-      fecha: document.getElementById('f-fecha').value,
-      cantidad: document.getElementById('f-cantidad').value,
-      foto: fotoActualDataUrl,
-      obs: document.getElementById('f-obs').value
-    };
-    closeForm();
-    showCampo(currentCampo); // refrescar lista con el check de "revisada"
+    var fecha = document.getElementById('f-fecha').value;
+    var cantidad = document.getElementById('f-cantidad').value;
+    var obs = document.getElementById('f-obs').value;
+
+    var btn = document.querySelector('#sheet-overlay .btn-save');
+    var textoOriginal = btn.textContent;
+    btn.textContent = 'Guardando…';
+    btn.disabled = true;
+
+    function guardarRegistro(fotoUrl){
+      REGISTROS[t.num] = {
+        monitor: monitorNombre,
+        fecha: fecha,
+        cantidad: cantidad,
+        foto: fotoUrl,
+        obs: obs
+      };
+
+      if(sb){
+        sb.from('ofm_monitoreos').insert({
+          trampa_num: t.num,
+          campo: t.campo,
+          cuartel: t.cuartel,
+          fecha: fecha,
+          monitor: monitorNombre,
+          cantidad: cantidad ? parseInt(cantidad,10) : 0,
+          foto_url: fotoUrl || null,
+          observaciones: obs || null
+        }).then(function(res){
+          btn.textContent = textoOriginal;
+          btn.disabled = false;
+          if(res.error){
+            alert('No se pudo guardar en Supabase: ' + res.error.message);
+          } else {
+            borrarBorrador('m', t.num);
+          }
+          closeForm();
+          showCampo(currentCampo);
+        });
+      } else {
+        btn.textContent = textoOriginal;
+        btn.disabled = false;
+        borrarBorrador('m', t.num);
+        closeForm();
+        showCampo(currentCampo);
+      }
+    }
+
+    if(sb && fotoActualFile){
+      var path = 'trampa-' + t.num + '-' + Date.now() + '-' + fotoActualFile.name.replace(/[^a-zA-Z0-9.]/g,'_');
+      sb.storage.from(BUCKET_FOTOS).upload(path, fotoActualFile).then(function(res){
+        if(res.error){
+          btn.textContent = textoOriginal;
+          btn.disabled = false;
+          alert('No se pudo subir la foto: ' + res.error.message);
+          return;
+        }
+        var pub = sb.storage.from(BUCKET_FOTOS).getPublicUrl(path);
+        guardarRegistro(pub.data.publicUrl);
+      });
+    } else {
+      // sin foto nueva: mantiene la que ya estaba (fotoActualDataUrl es la URL previa, o null)
+      guardarRegistro(fotoActualDataUrl);
+    }
   }
 
   function showCambioTrampas(){
@@ -1002,7 +1228,11 @@
         }
         sub = 'Postura: ' + formatFechaCorta(f.postura) + ' · Recambio: ' + formatFechaCorta(f.proximo);
       }
-      return '<div class="cambio-row" onclick="openFormCambio(' + f.t.num + ')">' +
+      var tieneBorrador = !!cargarBorrador('c', f.t.num);
+      if(tieneBorrador){
+        badge = '<span class="status-badge proximo">Borrador sin guardar</span>';
+      }
+      return '<div class="cambio-row' + (tieneBorrador ? ' has-draft' : '') + '" onclick="openFormCambio(' + f.t.num + ')">' +
         '<span class="trap-num">N°' + f.t.num + '</span>' +
         '<span class="cambio-info">' +
           '<p class="cambio-title">' + f.t.campo + ' · Cuartel ' + f.t.cuartel + '</p>' +
