@@ -140,6 +140,35 @@
   .option-chev{ flex:none; color:var(--ink-soft); }
   .option-chev svg{width:18px;height:18px;}
 
+  /* ---------- Tarjetas vivas (módulo Trampas OFM / Monitoreos) ---------- */
+  .option-card--vivid{
+    background: none;
+    box-shadow: 0 16px 30px -16px rgba(0,0,0,0.55);
+    position: relative;
+    overflow: hidden;
+  }
+  .option-card--vivid::after{
+    content:''; position:absolute; inset:0; border-radius:16px;
+    background-image: radial-gradient(circle, rgba(255,255,255,0.16) 1.4px, transparent 1.4px);
+    background-size: 18px 18px;
+    background-position: -4px -4px;
+    pointer-events:none;
+  }
+  .card-ofm{ background: linear-gradient(135deg, #E8A23D 0%, #B45A22 100%); }
+  .card-mon{ background: linear-gradient(135deg, #3F8FC9 0%, #235A8C 100%); }
+
+  .option-icon-vivid{
+    width:48px; height:48px; border-radius:12px; flex:none; position:relative; z-index:1;
+    display:flex; align-items:center; justify-content:center;
+    background: rgba(255,255,255,0.92);
+    border: 1px solid rgba(255,255,255,0.5);
+    font-size: 24px; line-height:1;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.15);
+  }
+  .option-card--vivid .option-title{ color:#FFFFFF; position:relative; z-index:1; font-size:17.5px; }
+  .option-card--vivid .option-sub{ color:rgba(255,255,255,0.82); position:relative; z-index:1; }
+  .option-card--vivid .option-chev{ color:rgba(255,255,255,0.85); position:relative; z-index:1; }
+
   #view-seleccion .foot-note{ margin-top:auto; padding-top:22px; }
 
   /* ---------- Campo detail (lista / mapa) ---------- */
@@ -395,14 +424,8 @@
       <p class="sel-sub">Elegí un módulo para comenzar.</p>
 
       <div class="option-list">
-        <button class="option-card" type="button" onclick="goTo('view-ofm-campos')">
-          <span class="option-icon ofm">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-              <path d="M12 3 L21 19 L3 19 Z"/>
-              <path d="M12 3 V19"/>
-              <circle cx="12" cy="12" r="1.6" fill="currentColor" stroke="none"/>
-            </svg>
-          </span>
+        <button class="option-card option-card--vivid card-ofm" type="button" onclick="goTo('view-ofm-campos')">
+          <span class="option-icon-vivid">🪤</span>
           <span class="option-text">
             <p class="option-title">Trampas OFM</p>
             <p class="option-sub">Conteo de polillas en trampas de feromona por sector</p>
@@ -412,14 +435,8 @@
           </span>
         </button>
 
-        <button class="option-card" type="button" onclick="alert('Siguiente: pantalla de Monitoreos')">
-          <span class="option-icon mon">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-              <circle cx="10.5" cy="10.5" r="6.5"/>
-              <line x1="15.2" y1="15.2" x2="21" y2="21"/>
-              <path d="M8 10.5 Q10.5 7.5 13 10.5" stroke-width="1.5"/>
-            </svg>
-          </span>
+        <button class="option-card option-card--vivid card-mon" type="button" onclick="alert('Siguiente: pantalla de Monitoreos')">
+          <span class="option-icon-vivid">🔍</span>
           <span class="option-text">
             <p class="option-title">Monitoreos</p>
             <p class="option-sub">Revisión de plagas por especie y sector</p>
