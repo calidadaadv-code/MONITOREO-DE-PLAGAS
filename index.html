@@ -535,7 +535,7 @@
   <!-- ---------- PANTALLA 2E: FORMULARIO DE MONITOREO DE PLAGA (gen&#233;rico) ---------- -->
   <section class="view" id="view-plaga-form">
     <div class="topbar">
-      <button class="btn-back" type="button" onclick="goTo('view-plagas-lista')" aria-label="Volver">
+      <button class="btn-back" type="button" onclick="goTo(plagaFormOrigen)" aria-label="Volver">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
       </button>
       <span class="topbar-label">Monitoreos · Plagas</span>
@@ -964,11 +964,11 @@
     'Hongos de la madera': '🪵'
   };
 
-  function renderListaItems(panelId, items, iconos, esPlaga){
+  function renderListaItems(panelId, items, iconos, esFormulario, origenVista){
     var html = items.map(function(nombre){
       var icono = (iconos && iconos[nombre]) || '🔎';
-      var accion = esPlaga
-        ? "abrirFormularioPlaga('" + nombre.replace(/'/g,"\\'") + "','" + icono + "')"
+      var accion = esFormulario
+        ? "abrirFormularioPlaga('" + nombre.replace(/'/g,"\\'") + "','" + icono + "','" + origenVista + "')"
         : "alert('Planilla de " + nombre.replace(/'/g,"\\'") + " — todavía en construcción')";
       return '<div class="cambio-row" onclick="' + accion + '">' +
         '<span class="trap-num plaga-icono">' + icono + '</span>' +
@@ -982,8 +982,8 @@
     document.getElementById(panelId).innerHTML = html;
   }
 
-  renderListaItems('panel-plagas', PLAGAS, ICONOS_PLAGAS, true);
-  renderListaItems('panel-enfermedades', ENFERMEDADES, ICONOS_ENFERMEDADES, false);
+  renderListaItems('panel-plagas', PLAGAS, ICONOS_PLAGAS, true, 'view-plagas-lista');
+  renderListaItems('panel-enfermedades', ENFERMEDADES, ICONOS_ENFERMEDADES, true, 'view-enfermedades-lista');
 
   var TRAMPAS = [
     {campo:'Santa Emilia', cuartel:'1',  especie:'Nectarin', variedad:'Luciana',        num:1,  lat:dms(33,28,37.43,'S'), lon:dms(71,5,7.61,'O')},
@@ -1696,6 +1696,7 @@
   }
   // ---- Formulario genérico de monitoreo de plagas ----
   var plagaActual = null; // {nombre, icono}
+  var plagaFormOrigen = 'view-plagas-lista';
   var metodoPlagaActual = null;
 
   function togglePlagaMonitorOtro(){
@@ -1734,8 +1735,9 @@
     if(el){ el.addEventListener('input', guardarBorradorPlagaActual); el.addEventListener('change', guardarBorradorPlagaActual); }
   });
 
-  function abrirFormularioPlaga(nombre, icono){
+  function abrirFormularioPlaga(nombre, icono, origenVista){
     plagaActual = {nombre: nombre, icono: icono};
+    plagaFormOrigen = origenVista || 'view-plagas-lista';
     document.getElementById('plaga-form-nombre').textContent = nombre;
     document.getElementById('plaga-form-icono').textContent = icono;
     document.getElementById('pf-fecha').value = formatFechaCorta(todayStr());
