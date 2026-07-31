@@ -304,6 +304,14 @@
   }
   .cambio-row:active{ transform:scale(0.98); }
   .cambio-row.has-draft{ border:1.6px solid #D9A441; box-shadow:0 8px 18px -12px rgba(0,0,0,0.45), 0 0 0 1px rgba(217,164,65,0.15) inset; }
+  .plaga-icono{ font-size:20px; background:#EAF1EA; }
+
+  .metodo-grid{ display:grid; grid-template-columns:1fr 1fr; gap:9px; }
+  .metodo-btn{
+    padding:11px; border-radius:11px; border:1.4px solid rgba(20,33,28,0.14); background:#FFFFFF;
+    font-family:'Space Grotesk',sans-serif; font-weight:600; font-size:14px; color:var(--ink-soft); cursor:pointer;
+  }
+  .metodo-btn.is-on{ background:var(--leaf); border-color:var(--leaf); color:#fff; }
   .cambio-info{ flex:1; min-width:0; }
   .cambio-title{ margin:0; font-size:13.5px; font-weight:600; color:var(--ink); }
   .cambio-sub{ margin:2px 0 0; font-size:11.5px; color:var(--ink-soft); }
@@ -435,7 +443,7 @@
           </span>
         </button>
 
-        <button class="option-card option-card--vivid card-mon" type="button" onclick="alert('Siguiente: pantalla de Monitoreos')">
+        <button class="option-card option-card--vivid card-mon" type="button" onclick="goTo('view-monitoreos-tipo')">
           <span class="option-icon-vivid">🔍</span>
           <span class="option-text">
             <p class="option-title">Monitoreos</p>
@@ -448,6 +456,171 @@
       </div>
 
       <p class="foot-note">Registro de monitoreo en terreno · datos sincronizados</p>
+    </div>
+  </section>
+
+  <!-- ---------- PANTALLA 2B: MONITOREOS - PLAGAS O ENFERMEDADES ---------- -->
+  <section class="view" id="view-monitoreos-tipo">
+    <div class="topbar">
+      <button class="btn-back" type="button" onclick="goTo('view-seleccion')" aria-label="Volver">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+      </button>
+      <span class="topbar-label">Monitoreos</span>
+    </div>
+
+    <div class="content">
+      <h2 class="sel-heading">¿Plagas o enfermedades?</h2>
+      <p class="sel-sub">Elegí qué querés revisar.</p>
+
+      <div class="option-list">
+        <button class="option-card" type="button" onclick="goTo('view-plagas-lista')">
+          <span class="option-icon-vivid" style="background:rgba(255,255,255,0.92);width:44px;height:44px;font-size:21px;">🐛</span>
+          <span class="option-text">
+            <p class="option-title">Plagas</p>
+            <p class="option-sub">Trips, chanchito blanco, burritos, pulgones, escamas, drosophila</p>
+          </span>
+          <span class="option-chev">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+          </span>
+        </button>
+
+        <button class="option-card" type="button" onclick="goTo('view-enfermedades-lista')">
+          <span class="option-icon-vivid" style="background:rgba(255,255,255,0.92);width:44px;height:44px;font-size:21px;">🍂</span>
+          <span class="option-text">
+            <p class="option-title">Enfermedades</p>
+            <p class="option-sub">Oídio, cloca, cáncer bacterial, hongos de la madera</p>
+          </span>
+          <span class="option-chev">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+          </span>
+        </button>
+      </div>
+
+      <p class="foot-note">Registro de monitoreo en terreno · datos sincronizados</p>
+    </div>
+  </section>
+
+  <!-- ---------- PANTALLA 2C: LISTA DE PLAGAS ---------- -->
+  <section class="view" id="view-plagas-lista">
+    <div class="topbar">
+      <button class="btn-back" type="button" onclick="goTo('view-monitoreos-tipo')" aria-label="Volver">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+      </button>
+      <span class="topbar-label">Monitoreos · Plagas</span>
+    </div>
+
+    <div class="content">
+      <h2 class="campo-heading">Plagas</h2>
+      <p class="campo-sub">Elegí una plaga para ver su planilla de revisión.</p>
+      <div class="panel is-on" id="panel-plagas" style="flex:1;overflow-y:auto;padding-bottom:20px;"></div>
+    </div>
+  </section>
+
+  <!-- ---------- PANTALLA 2D: LISTA DE ENFERMEDADES ---------- -->
+  <section class="view" id="view-enfermedades-lista">
+    <div class="topbar">
+      <button class="btn-back" type="button" onclick="goTo('view-monitoreos-tipo')" aria-label="Volver">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+      </button>
+      <span class="topbar-label">Monitoreos · Enfermedades</span>
+    </div>
+
+    <div class="content">
+      <h2 class="campo-heading">Enfermedades</h2>
+      <p class="campo-sub">Elegí una enfermedad para ver su planilla de revisión.</p>
+      <div class="panel is-on" id="panel-enfermedades" style="flex:1;overflow-y:auto;padding-bottom:20px;"></div>
+    </div>
+  </section>
+
+  <!-- ---------- PANTALLA 2E: FORMULARIO DE MONITOREO DE PLAGA (gen&#233;rico) ---------- -->
+  <section class="view" id="view-plaga-form">
+    <div class="topbar">
+      <button class="btn-back" type="button" onclick="goTo('view-plagas-lista')" aria-label="Volver">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+      </button>
+      <span class="topbar-label">Monitoreos · Plagas</span>
+    </div>
+
+    <div class="content" style="padding:14px 20px 24px;">
+      <h2 class="campo-heading" id="plaga-form-titulo" style="display:flex;align-items:center;gap:10px;">
+        <span id="plaga-form-icono" style="font-size:26px;"></span> <span id="plaga-form-nombre">Plaga</span>
+      </h2>
+      <p class="campo-sub">Planilla de revisión</p>
+
+      <div class="field">
+        <label>Fecha</label>
+        <input type="text" id="pf-fecha" readonly style="background:#F0EEE4;color:var(--ink-soft);">
+      </div>
+
+      <div class="field">
+        <label for="pf-monitor">Monitor</label>
+        <select id="pf-monitor" onchange="togglePlagaMonitorOtro()">
+          <option value="Paola Riquelme">Paola Riquelme</option>
+          <option value="__otro__">Otro…</option>
+        </select>
+      </div>
+      <div class="field" id="pf-monitor-otro-wrap" style="display:none;">
+        <label for="pf-monitor-otro">Nombre del monitor</label>
+        <input type="text" id="pf-monitor-otro" placeholder="Escribir nombre">
+      </div>
+
+      <div class="field">
+        <label for="pf-campo">Campo</label>
+        <select id="pf-campo">
+          <option value="Santa Emilia">Santa Emilia</option>
+          <option value="San Lorenzo">San Lorenzo</option>
+          <option value="San Gregorio">San Gregorio</option>
+        </select>
+      </div>
+
+      <div class="field-row">
+        <div class="field">
+          <label for="pf-cuartel">Cuartel</label>
+          <input type="text" id="pf-cuartel" placeholder="Ej: 7A">
+        </div>
+        <div class="field">
+          <label for="pf-hileras">Hileras</label>
+          <input type="text" id="pf-hileras" placeholder="Ej: 12-18">
+        </div>
+      </div>
+
+      <div class="field">
+        <label for="pf-variedad">Variedad</label>
+        <input type="text" id="pf-variedad" placeholder="Ej: Garcica">
+      </div>
+
+      <div class="field">
+        <label>Método de monitoreo</label>
+        <div class="metodo-grid">
+          <button type="button" class="metodo-btn" id="pf-metodo-x" onclick="setMetodoPlaga('En X')">En X</button>
+          <button type="button" class="metodo-btn" id="pf-metodo-z" onclick="setMetodoPlaga('En Z')">En Z</button>
+          <button type="button" class="metodo-btn" id="pf-metodo-y" onclick="setMetodoPlaga('En Y')">En Y</button>
+          <button type="button" class="metodo-btn" id="pf-metodo-otro" onclick="setMetodoPlaga('__otro__')">Otro</button>
+        </div>
+      </div>
+      <div class="field" id="pf-metodo-otro-wrap" style="display:none;">
+        <label for="pf-metodo-otro-texto">Especificar método</label>
+        <input type="text" id="pf-metodo-otro-texto" placeholder="Escribir método">
+      </div>
+
+      <div class="field">
+        <label for="pf-obs">Observaciones</label>
+        <textarea id="pf-obs" placeholder="Notas de la revisión (opcional)"></textarea>
+      </div>
+
+      <button class="btn-save" type="button" onclick="guardarPlagaMonitoreo()">Guardar registro</button>
+
+      <div class="resumen-actions" style="margin-top:12px;">
+        <button class="btn-resumen-secondary" type="button" onclick="descargarInformePlaga()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+          Descargar informe
+        </button>
+        <button class="btn-resumen-primary" type="button" onclick="compartirInformePlaga()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.6" y1="13.5" x2="15.4" y2="17.5"/><line x1="15.4" y1="6.5" x2="8.6" y2="10.5"/></svg>
+          Compartir
+        </button>
+      </div>
+      <p class="foot-note" style="margin-top:10px;">El informe se arma con los datos de este formulario.</p>
     </div>
   </section>
 
@@ -772,6 +945,45 @@
     if(dir === 'S' || dir === 'O') dec = -dec;
     return dec;
   }
+
+  var PLAGAS = ['Trips', 'Chanchito blanco', 'Burritos', 'Pulgones', 'Escamas', 'Drosophila'];
+  var ENFERMEDADES = ['Oídio', 'Cloca', 'Cáncer bacterial', 'Hongos de la madera'];
+
+  var ICONOS_PLAGAS = {
+    'Trips': '🪰',
+    'Chanchito blanco': '🐛',
+    'Burritos': '🪲',
+    'Pulgones': '🐜',
+    'Escamas': '🐚',
+    'Drosophila': '🦟'
+  };
+  var ICONOS_ENFERMEDADES = {
+    'Oídio': '🌫️',
+    'Cloca': '🍄',
+    'Cáncer bacterial': '🦠',
+    'Hongos de la madera': '🪵'
+  };
+
+  function renderListaItems(panelId, items, iconos, esPlaga){
+    var html = items.map(function(nombre){
+      var icono = (iconos && iconos[nombre]) || '🔎';
+      var accion = esPlaga
+        ? "abrirFormularioPlaga('" + nombre.replace(/'/g,"\\'") + "','" + icono + "')"
+        : "alert('Planilla de " + nombre.replace(/'/g,"\\'") + " — todavía en construcción')";
+      return '<div class="cambio-row" onclick="' + accion + '">' +
+        '<span class="trap-num plaga-icono">' + icono + '</span>' +
+        '<span class="cambio-info">' +
+          '<p class="cambio-title">' + nombre + '</p>' +
+          '<p class="cambio-sub">Toca para ver la planilla de revisión</p>' +
+        '</span>' +
+        '<span class="option-chev" style="color:var(--ink-soft);"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg></span>' +
+      '</div>';
+    }).join('');
+    document.getElementById(panelId).innerHTML = html;
+  }
+
+  renderListaItems('panel-plagas', PLAGAS, ICONOS_PLAGAS, true);
+  renderListaItems('panel-enfermedades', ENFERMEDADES, ICONOS_ENFERMEDADES, false);
 
   var TRAMPAS = [
     {campo:'Santa Emilia', cuartel:'1',  especie:'Nectarin', variedad:'Luciana',        num:1,  lat:dms(33,28,37.43,'S'), lon:dms(71,5,7.61,'O')},
@@ -1479,6 +1691,214 @@
       }).catch(function(){ /* usuario canceló */ });
     } else {
       doc.save(nombreArchivoResumen());
+      alert('Se descargó el informe en PDF. Este dispositivo no permite compartir el archivo directo, así que adjuntalo manualmente en el chat de WhatsApp.');
+    }
+  }
+  // ---- Formulario genérico de monitoreo de plagas ----
+  var plagaActual = null; // {nombre, icono}
+  var metodoPlagaActual = null;
+
+  function togglePlagaMonitorOtro(){
+    var sel = document.getElementById('pf-monitor').value;
+    document.getElementById('pf-monitor-otro-wrap').style.display = (sel === '__otro__') ? 'block' : 'none';
+  }
+
+  function setMetodoPlaga(valor){
+    metodoPlagaActual = valor;
+    ['pf-metodo-x','pf-metodo-z','pf-metodo-y','pf-metodo-otro'].forEach(function(id){
+      document.getElementById(id).classList.remove('is-on');
+    });
+    var mapa = {'En X':'pf-metodo-x','En Z':'pf-metodo-z','En Y':'pf-metodo-y','__otro__':'pf-metodo-otro'};
+    document.getElementById(mapa[valor]).classList.add('is-on');
+    document.getElementById('pf-metodo-otro-wrap').style.display = (valor === '__otro__') ? 'block' : 'none';
+    guardarBorradorPlagaActual();
+  }
+
+  function guardarBorradorPlagaActual(){
+    if(!plagaActual) return;
+    guardarBorrador('p', plagaActual.nombre, {
+      monitorSel: document.getElementById('pf-monitor').value,
+      monitorOtro: document.getElementById('pf-monitor-otro').value,
+      campo: document.getElementById('pf-campo').value,
+      cuartel: document.getElementById('pf-cuartel').value,
+      hileras: document.getElementById('pf-hileras').value,
+      variedad: document.getElementById('pf-variedad').value,
+      metodo: metodoPlagaActual,
+      metodoOtroTexto: document.getElementById('pf-metodo-otro-texto').value,
+      obs: document.getElementById('pf-obs').value
+    });
+  }
+
+  ['pf-monitor','pf-monitor-otro','pf-campo','pf-cuartel','pf-hileras','pf-variedad','pf-metodo-otro-texto','pf-obs'].forEach(function(id){
+    var el = document.getElementById(id);
+    if(el){ el.addEventListener('input', guardarBorradorPlagaActual); el.addEventListener('change', guardarBorradorPlagaActual); }
+  });
+
+  function abrirFormularioPlaga(nombre, icono){
+    plagaActual = {nombre: nombre, icono: icono};
+    document.getElementById('plaga-form-nombre').textContent = nombre;
+    document.getElementById('plaga-form-icono').textContent = icono;
+    document.getElementById('pf-fecha').value = formatFechaCorta(todayStr());
+
+    var borrador = cargarBorrador('p', nombre);
+    var d = borrador || {};
+
+    document.getElementById('pf-monitor').value = d.monitorSel || 'Paola Riquelme';
+    document.getElementById('pf-monitor-otro').value = d.monitorOtro || '';
+    togglePlagaMonitorOtro();
+
+    document.getElementById('pf-campo').value = d.campo || 'Santa Emilia';
+    document.getElementById('pf-cuartel').value = d.cuartel || '';
+    document.getElementById('pf-hileras').value = d.hileras || '';
+    document.getElementById('pf-variedad').value = d.variedad || '';
+    document.getElementById('pf-obs').value = d.obs || '';
+    document.getElementById('pf-metodo-otro-texto').value = d.metodoOtroTexto || '';
+
+    setMetodoPlaga(d.metodo || 'En X');
+
+    goTo('view-plaga-form');
+  }
+
+  function datosFormularioPlagaActual(){
+    var monitorSel = document.getElementById('pf-monitor').value;
+    var monitor = (monitorSel === '__otro__') ? document.getElementById('pf-monitor-otro').value : monitorSel;
+    var metodoTexto = (metodoPlagaActual === '__otro__')
+      ? document.getElementById('pf-metodo-otro-texto').value
+      : metodoPlagaActual;
+    return {
+      plaga: plagaActual.nombre,
+      fecha: todayStr(),
+      monitor: monitor,
+      campo: document.getElementById('pf-campo').value,
+      cuartel: document.getElementById('pf-cuartel').value,
+      hileras: document.getElementById('pf-hileras').value,
+      variedad: document.getElementById('pf-variedad').value,
+      metodo: metodoTexto,
+      obs: document.getElementById('pf-obs').value
+    };
+  }
+
+  function guardarPlagaMonitoreo(){
+    if(!plagaActual) return;
+    var datos = datosFormularioPlagaActual();
+    var btn = document.querySelector('#view-plaga-form .btn-save');
+    var textoOriginal = btn.textContent;
+    btn.textContent = 'Guardando…';
+    btn.disabled = true;
+
+    function terminar(exito){
+      btn.textContent = textoOriginal;
+      btn.disabled = false;
+      if(exito){
+        borrarBorrador('p', plagaActual.nombre);
+        alert('Registro guardado.');
+      }
+    }
+
+    if(sb){
+      sb.from('plagas_monitoreos').insert({
+        plaga: datos.plaga,
+        fecha: datos.fecha,
+        monitor: datos.monitor,
+        campo: datos.campo,
+        cuartel: datos.cuartel,
+        variedad: datos.variedad,
+        hileras: datos.hileras,
+        metodo: datos.metodo,
+        observaciones: datos.obs || null
+      }).then(function(res){
+        if(res.error){
+          alert('No se pudo guardar en Supabase: ' + res.error.message);
+          terminar(false);
+        } else {
+          terminar(true);
+        }
+      });
+    } else {
+      terminar(true);
+    }
+  }
+
+  function construirInformePlagaPDF(){
+    var datos = datosFormularioPlagaActual();
+    var doc = new window.jspdf.jsPDF({unit:'mm', format:'a4'});
+    var pageW = doc.internal.pageSize.getWidth();
+    var margin = 16;
+    var y;
+
+    doc.setFillColor(18,59,77);
+    doc.rect(0,0,pageW,24,'F');
+    doc.setTextColor(255,255,255);
+    doc.setFont('helvetica','bold');
+    doc.setFontSize(14.5);
+    doc.text('INFORME DE MONITOREO · ' + datos.plaga.toUpperCase(), margin, 14);
+    doc.setFont('helvetica','normal');
+    doc.setFontSize(9.5);
+    doc.text('Agrícola Agua del Valle SPA · Fundo Lo Ovalle · ' + formatFechaCorta(datos.fecha), margin, 20);
+
+    y = 34;
+    function fila(label, valor){
+      doc.setFont('helvetica','bold');
+      doc.setFontSize(10);
+      doc.setTextColor(90,90,90);
+      doc.text(label, margin, y);
+      doc.setFont('helvetica','normal');
+      doc.setFontSize(11);
+      doc.setTextColor(20,33,28);
+      doc.text(valor || '—', margin + 42, y);
+      y += 8;
+    }
+
+    fila('Monitor', datos.monitor);
+    fila('Campo', datos.campo);
+    fila('Cuartel', datos.cuartel);
+    fila('Variedad', datos.variedad);
+    fila('Hileras', datos.hileras);
+    fila('Método', datos.metodo);
+
+    y += 2;
+    doc.setDrawColor(210,210,200);
+    doc.line(margin, y, pageW-margin, y);
+    y += 8;
+
+    doc.setFont('helvetica','bold');
+    doc.setFontSize(10);
+    doc.setTextColor(90,90,90);
+    doc.text('Observaciones', margin, y);
+    y += 6;
+    doc.setFont('helvetica','normal');
+    doc.setFontSize(10.5);
+    doc.setTextColor(20,33,28);
+    var obsLines = doc.splitTextToSize(datos.obs || 'Sin observaciones.', pageW - margin*2);
+    doc.text(obsLines, margin, y);
+
+    return doc;
+  }
+
+  function nombreArchivoInformePlaga(){
+    return 'Informe_' + plagaActual.nombre.replace(/\s+/g,'_') + '_' + todayStr() + '.pdf';
+  }
+
+  function descargarInformePlaga(){
+    if(!plagaActual) return;
+    var doc = construirInformePlagaPDF();
+    doc.save(nombreArchivoInformePlaga());
+  }
+
+  function compartirInformePlaga(){
+    if(!plagaActual) return;
+    var doc = construirInformePlagaPDF();
+    var blob = doc.output('blob');
+    var file = new File([blob], nombreArchivoInformePlaga(), {type:'application/pdf'});
+
+    if(navigator.canShare && navigator.canShare({files:[file]})){
+      navigator.share({
+        files: [file],
+        title: 'Informe ' + plagaActual.nombre,
+        text: 'Informe de monitoreo de ' + plagaActual.nombre + ' · ' + formatFechaCorta(todayStr())
+      }).catch(function(){});
+    } else {
+      doc.save(nombreArchivoInformePlaga());
       alert('Se descargó el informe en PDF. Este dispositivo no permite compartir el archivo directo, así que adjuntalo manualmente en el chat de WhatsApp.');
     }
   }
