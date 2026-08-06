@@ -8,6 +8,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
 <style>
   :root{
@@ -216,6 +217,14 @@
   }
   .trap-pin span{ transform:rotate(45deg); font-family:'Space Grotesk',sans-serif; font-weight:700; font-size:10.5px; }
 
+  .leyenda-instalacion{ display:flex; gap:18px; margin-top:4px; }
+  .leyenda-instalacion span{ display:flex; align-items:center; gap:6px; font-size:12.5px; color:rgba(246,244,236,0.75); }
+  .dot{ width:10px; height:10px; border-radius:50%; display:inline-block; }
+  .dot.verde{ background:#4FA65B; }
+  .dot.roja{ background:#C0392B; }
+  .trap-pin.pin-verde{ background:#4FA65B; }
+  .trap-pin.pin-roja{ background:#C0392B; }
+
   .trap-row{ cursor:pointer; transition:transform 0.12s ease; }
   .trap-row:active{ transform:scale(0.98); }
   .trap-check{
@@ -314,6 +323,23 @@
     font-family:'Space Grotesk',sans-serif; font-weight:600; font-size:14px; color:var(--ink-soft); cursor:pointer;
   }
   .metodo-btn.is-on{ background:var(--leaf); border-color:var(--leaf); color:#fff; }
+
+  .estado-grid{ display:flex; flex-wrap:wrap; gap:9px; }
+  .estado-btn{
+    padding:10px 14px; border-radius:11px; border:1.4px solid rgba(20,33,28,0.14); background:#FFFFFF;
+    font-family:'Space Grotesk',sans-serif; font-weight:600; font-size:13.5px; color:var(--ink-soft); cursor:pointer;
+  }
+  .estado-btn.is-on{ background:var(--teal-mid); border-color:var(--teal-mid); color:#fff; }
+
+  .ejemplar-row{ display:flex; align-items:center; gap:12px; margin-bottom:9px; }
+  .ejemplar-row label{
+    min-width:64px; font-family:'Space Grotesk',sans-serif; font-weight:600; font-size:13px; color:var(--paper);
+  }
+  .ejemplar-row input{
+    flex:1; border:1.4px solid rgba(20,33,28,0.14); background:#FFFFFF; border-radius:11px;
+    padding:10px 12px; font-family:'Inter',sans-serif; font-size:14.5px; color:var(--ink);
+  }
+  .ejemplar-row input:focus{ outline:none; border-color:var(--leaf); }
   .cambio-info{ flex:1; min-width:0; }
   .cambio-title{ margin:0; font-size:13.5px; font-weight:600; color:var(--ink); }
   .cambio-sub{ margin:2px 0 0; font-size:11.5px; color:var(--ink-soft); }
@@ -592,6 +618,32 @@
       </div>
 
       <div class="field">
+        <label for="pf-estructura">Estructura</label>
+        <select id="pf-estructura">
+          <option value="Raíz">Raíz</option>
+          <option value="Tallo">Tallo</option>
+          <option value="Hoja">Hoja</option>
+          <option value="Frutos">Frutos</option>
+        </select>
+      </div>
+
+      <div class="field">
+        <label>Estado de la plaga</label>
+        <div class="estado-grid">
+          <button type="button" class="estado-btn" data-estado="Huevo" onclick="toggleEstado('Huevo')">Huevo</button>
+          <button type="button" class="estado-btn" data-estado="Larva" onclick="toggleEstado('Larva')">Larva</button>
+          <button type="button" class="estado-btn" data-estado="Pupa" onclick="toggleEstado('Pupa')">Pupa</button>
+          <button type="button" class="estado-btn" data-estado="Ninfa" onclick="toggleEstado('Ninfa')">Ninfa</button>
+          <button type="button" class="estado-btn" data-estado="Adulto" onclick="toggleEstado('Adulto')">Adulto</button>
+        </div>
+      </div>
+
+      <div class="field" id="pf-ejemplares-wrap" style="display:none;">
+        <label>Cantidad de ejemplares encontrados</label>
+        <div id="pf-ejemplares-inputs"></div>
+      </div>
+
+      <div class="field">
         <label>Método de monitoreo</label>
         <div class="metodo-grid">
           <button type="button" class="metodo-btn" id="pf-metodo-x" onclick="setMetodoPlaga('En X')">En X</button>
@@ -696,7 +748,18 @@
           </span>
           <span class="option-text">
             <p class="option-title">Cambio de trampas</p>
-            <p class="option-sub">Próximas fechas de recambio (cada 3 meses desde la postura)</p>
+            <p class="option-sub">Próximas fechas de recambio (10 semanas desde la postura)</p>
+          </span>
+          <span class="option-chev">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+          </span>
+        </button>
+
+        <button class="option-card" type="button" onclick="showInstalacionInforme()">
+          <span class="option-icon-vivid" style="background:rgba(255,255,255,0.92);width:44px;height:44px;font-size:21px;">🗺️</span>
+          <span class="option-text">
+            <p class="option-title">Informe de instalación</p>
+            <p class="option-sub">Mapa de trampas instaladas (verde) y pendientes (rojo)</p>
           </span>
           <span class="option-chev">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
@@ -765,8 +828,43 @@
 
     <div class="content">
       <h2 class="campo-heading">Cambio de trampas</h2>
-      <p class="campo-sub">Recambio cada 3 meses desde la fecha de postura.</p>
+      <p class="campo-sub">Recambio a las 10 semanas desde la fecha de postura.</p>
       <div class="panel is-on" id="panel-cambio" style="flex:1;overflow-y:auto;padding-bottom:20px;"></div>
+    </div>
+  </section>
+
+  <!-- ---------- PANTALLA 4D: INFORME DE INSTALACION (MAPA VERDE/ROJO) ---------- -->
+  <section class="view" id="view-instalacion-informe">
+    <div class="topbar">
+      <button class="btn-back" type="button" onclick="goTo('view-ofm-campos')" aria-label="Volver">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+      </button>
+      <span class="topbar-label">Trampas OFM</span>
+    </div>
+
+    <div class="content">
+      <h2 class="campo-heading">Informe de instalación</h2>
+      <p class="campo-sub" id="instalacion-sub">0 de 45 trampas instaladas</p>
+
+      <div class="resumen-actions">
+        <button class="btn-resumen-secondary" type="button" onclick="descargarInformeInstalacion()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+          Descargar informe
+        </button>
+        <button class="btn-resumen-primary" type="button" onclick="compartirInformeInstalacion()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.6" y1="13.5" x2="15.4" y2="17.5"/><line x1="15.4" y1="6.5" x2="8.6" y2="10.5"/></svg>
+          Compartir
+        </button>
+      </div>
+
+      <div class="leyenda-instalacion">
+        <span><i class="dot verde"></i> Instalada</span>
+        <span><i class="dot roja"></i> Pendiente</span>
+      </div>
+
+      <div id="leaflet-map-instalacion" style="width:100%;height:360px;border-radius:14px;overflow:hidden;border:1px solid var(--line);margin-top:10px;"></div>
+
+      <p class="foot-note" style="margin-top:14px;">El mapa y el informe se arman solos con las fechas de postura ya cargadas.</p>
     </div>
   </section>
 
@@ -1111,6 +1209,162 @@
     mapInstance.invalidateSize();
   }
 
+  // ---- Informe de instalación (mapa verde/rojo de las 45 trampas) ----
+  var mapInstanceInstalacion = null;
+  var mapMarkersInstalacion = [];
+
+  function showInstalacionInforme(){
+    var instaladas = TRAMPAS.filter(function(t){ return !!(CAMBIOS[t.num] && CAMBIOS[t.num].postura); });
+    document.getElementById('instalacion-sub').textContent =
+      instaladas.length + ' de ' + TRAMPAS.length + ' trampas instaladas';
+    goTo('view-instalacion-informe');
+    setTimeout(renderMapaInstalacion, 30);
+  }
+
+  function renderMapaInstalacion(){
+    if(!mapInstanceInstalacion){
+      mapInstanceInstalacion = L.map('leaflet-map-instalacion');
+    }
+    mapMarkersInstalacion.forEach(function(m){ mapInstanceInstalacion.removeLayer(m); });
+    mapMarkersInstalacion = [];
+
+    if(!mapInstanceInstalacion._hasTileLayer){
+      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        maxZoom: 20,
+        attribution: '&copy; OpenStreetMap',
+        crossOrigin: true
+      }).addTo(mapInstanceInstalacion);
+      mapInstanceInstalacion._hasTileLayer = true;
+    }
+
+    var bounds = [];
+    TRAMPAS.forEach(function(t){
+      var instalada = !!(CAMBIOS[t.num] && CAMBIOS[t.num].postura);
+      var claseColor = instalada ? 'pin-verde' : 'pin-roja';
+      var icon = L.divIcon({
+        className: '',
+        html: '<div class="trap-pin ' + claseColor + '"><span>' + t.num + '</span></div>',
+        iconSize: [24,24],
+        iconAnchor: [12,24]
+      });
+      var marker = L.marker([t.lat, t.lon], {icon: icon}).addTo(mapInstanceInstalacion);
+      marker.bindPopup('<b>Trampa N°' + t.num + '</b><br>' + t.campo + ' · Cuartel ' + t.cuartel + '<br>' + (instalada ? 'Instalada: ' + formatFechaCorta(CAMBIOS[t.num].postura) : 'Pendiente de instalar'));
+      mapMarkersInstalacion.push(marker);
+      bounds.push([t.lat, t.lon]);
+    });
+
+    mapInstanceInstalacion.fitBounds(bounds, {padding:[20,20]});
+    mapInstanceInstalacion.invalidateSize();
+  }
+
+  function nombreArchivoInstalacion(){
+    return 'Informe_Instalacion_Trampas_' + todayStr() + '.pdf';
+  }
+
+  function generarPDFInstalacion(callback){
+    var instaladas = TRAMPAS.filter(function(t){ return !!(CAMBIOS[t.num] && CAMBIOS[t.num].postura); });
+    var pendientes = TRAMPAS.filter(function(t){ return !instaladas.some(function(i){ return i.num === t.num; }); });
+
+    var doc = new window.jspdf.jsPDF({unit:'mm', format:'a4'});
+    var pageW = doc.internal.pageSize.getWidth();
+    var margin = 16;
+    var y = 32;
+
+    doc.setFillColor(18,59,77);
+    doc.rect(0,0,pageW,24,'F');
+    doc.setTextColor(255,255,255);
+    doc.setFont('helvetica','bold');
+    doc.setFontSize(14.5);
+    doc.text('INFORME DE INSTALACIÓN DE TRAMPAS OFM', margin, 14);
+    doc.setFont('helvetica','normal');
+    doc.setFontSize(9.5);
+    doc.text('Agrícola Agua del Valle SPA · Fundo Lo Ovalle · ' + formatFechaCorta(todayStr()), margin, 20);
+
+    doc.setTextColor(20,33,28);
+    doc.setFont('helvetica','bold');
+    doc.setFontSize(11);
+    doc.text(instaladas.length + ' de ' + TRAMPAS.length + ' trampas instaladas   ·   ' + pendientes.length + ' pendientes', margin, y);
+    y += 8;
+
+    function agregarLeyendaYListaPendientes(yInicio){
+      var yy = yInicio;
+      doc.setFillColor(79,166,91);
+      doc.circle(margin+2, yy-1.3, 1.6, 'F');
+      doc.setFont('helvetica','normal'); doc.setFontSize(9); doc.setTextColor(90,90,90);
+      doc.text('Instalada', margin+6, yy);
+      doc.setFillColor(192,57,43);
+      doc.circle(margin+38, yy-1.3, 1.6, 'F');
+      doc.text('Pendiente', margin+42, yy);
+      yy += 8;
+
+      doc.setDrawColor(210,210,200);
+      doc.line(margin, yy, pageW-margin, yy);
+      yy += 8;
+
+      doc.setFont('helvetica','bold'); doc.setFontSize(9.5); doc.setTextColor(140,45,32);
+      doc.text('Trampas pendientes de instalar (' + pendientes.length + '):', margin, yy);
+      yy += 5;
+      doc.setFont('helvetica','normal'); doc.setFontSize(8.5); doc.setTextColor(110,110,110);
+      var texto = pendientes.length
+        ? pendientes.map(function(t){ return 'N°' + t.num; }).join(', ')
+        : 'Ninguna — todas las trampas están instaladas.';
+      var lineas = doc.splitTextToSize(texto, pageW - margin*2);
+      doc.text(lineas, margin, yy);
+      return yy;
+    }
+
+    var mapEl = document.getElementById('leaflet-map-instalacion');
+    if(window.html2canvas && mapEl){
+      html2canvas(mapEl, {useCORS:true, allowTaint:false, logging:false}).then(function(canvas){
+        try{
+          var imgData = canvas.toDataURL('image/png');
+          var imgW = pageW - margin*2;
+          var imgH = imgW * canvas.height / canvas.width;
+          doc.addImage(imgData, 'PNG', margin, y, imgW, imgH);
+          y += imgH + 8;
+        } catch(e){
+          doc.setFont('helvetica','italic'); doc.setFontSize(9); doc.setTextColor(140,90,32);
+          doc.text('(No se pudo incluir la imagen del mapa)', margin, y);
+          y += 8;
+        }
+        agregarLeyendaYListaPendientes(y);
+        callback(doc);
+      }).catch(function(){
+        doc.setFont('helvetica','italic'); doc.setFontSize(9); doc.setTextColor(140,90,32);
+        doc.text('(No se pudo incluir la imagen del mapa)', margin, y);
+        y += 8;
+        agregarLeyendaYListaPendientes(y);
+        callback(doc);
+      });
+    } else {
+      agregarLeyendaYListaPendientes(y);
+      callback(doc);
+    }
+  }
+
+  function descargarInformeInstalacion(){
+    generarPDFInstalacion(function(doc){
+      doc.save(nombreArchivoInstalacion());
+    });
+  }
+
+  function compartirInformeInstalacion(){
+    generarPDFInstalacion(function(doc){
+      var blob = doc.output('blob');
+      var file = new File([blob], nombreArchivoInstalacion(), {type:'application/pdf'});
+      if(navigator.canShare && navigator.canShare({files:[file]})){
+        navigator.share({
+          files: [file],
+          title: 'Informe de instalación de trampas',
+          text: 'Informe de instalación de trampas OFM · ' + formatFechaCorta(todayStr())
+        }).catch(function(){});
+      } else {
+        doc.save(nombreArchivoInstalacion());
+        alert('Se descargó el informe en PDF. Este dispositivo no permite compartir el archivo directo, así que adjuntalo manualmente en el chat de WhatsApp.');
+      }
+    });
+  }
+
   // ---- Formulario de ingreso por trampa ----
   // ---- Borradores locales (para no perder datos si sale sin guardar) ----
   var REGISTROS = {};
@@ -1204,6 +1458,15 @@
     return d.getFullYear() + '-' + pad(d.getMonth()+1) + '-' + pad(d.getDate());
   }
 
+  function addWeeks(dateStr, weeks){
+    if(!dateStr) return null;
+    var parts = dateStr.split('-');
+    var d = new Date(parseInt(parts[0],10), parseInt(parts[1],10)-1, parseInt(parts[2],10));
+    d.setDate(d.getDate() + weeks*7);
+    var pad = function(n){ return (n<10?'0':'')+n; };
+    return d.getFullYear() + '-' + pad(d.getMonth()+1) + '-' + pad(d.getDate());
+  }
+
   function formatFechaCorta(dateStr){
     if(!dateStr) return '—';
     var parts = dateStr.split('-');
@@ -1213,7 +1476,7 @@
 
   function actualizarProximoCambio2(){
     var postura = document.getElementById('f2-fecha').value;
-    var proximo = addMonths(postura, 3);
+    var proximo = addWeeks(postura, 10);
     document.getElementById('f2-proximo').value = proximo ? formatFechaCorta(proximo) : '';
   }
 
@@ -1432,7 +1695,7 @@
     var filas = TRAMPAS.map(function(t){
       var reg = CAMBIOS[t.num];
       var postura = reg ? reg.postura : null;
-      var proximo = postura ? addMonths(postura, 3) : null;
+      var proximo = postura ? addWeeks(postura, 10) : null;
       return {t:t, postura:postura, proximo:proximo};
     });
 
@@ -1700,6 +1963,42 @@
   var plagaActual = null; // {nombre, icono}
   var plagaFormOrigen = 'view-plagas-lista';
   var metodoPlagaActual = null;
+  var estadosSeleccionados = [];
+  var ejemplaresPorEstado = {};
+
+  var ESTADOS_PLAGA = ['Huevo','Larva','Pupa','Ninfa','Adulto'];
+
+  function toggleEstado(estado){
+    var idx = estadosSeleccionados.indexOf(estado);
+    if(idx === -1){ estadosSeleccionados.push(estado); } else { estadosSeleccionados.splice(idx,1); delete ejemplaresPorEstado[estado]; }
+    document.querySelector('.estado-btn[data-estado="'+estado+'"]').classList.toggle('is-on');
+    renderEjemplaresInputs();
+    guardarBorradorPlagaActual();
+  }
+
+  function renderEjemplaresInputs(){
+    var wrap = document.getElementById('pf-ejemplares-wrap');
+    var container = document.getElementById('pf-ejemplares-inputs');
+    if(estadosSeleccionados.length === 0){
+      wrap.style.display = 'none';
+      container.innerHTML = '';
+      return;
+    }
+    wrap.style.display = 'block';
+    container.innerHTML = estadosSeleccionados.map(function(estado){
+      var val = ejemplaresPorEstado[estado] || '';
+      return '<div class="ejemplar-row">' +
+        '<label>' + estado + '</label>' +
+        '<input type="number" min="0" placeholder="0" data-estado-input="' + estado + '" value="' + val + '" oninput="onEjemplarInput(this)">' +
+      '</div>';
+    }).join('');
+  }
+
+  function onEjemplarInput(el){
+    var estado = el.getAttribute('data-estado-input');
+    ejemplaresPorEstado[estado] = el.value;
+    guardarBorradorPlagaActual();
+  }
 
   function togglePlagaMonitorOtro(){
     var sel = document.getElementById('pf-monitor').value;
@@ -1726,13 +2025,16 @@
       cuartel: document.getElementById('pf-cuartel').value,
       hileras: document.getElementById('pf-hileras').value,
       variedad: document.getElementById('pf-variedad').value,
+      estructura: document.getElementById('pf-estructura').value,
+      estados: estadosSeleccionados.slice(),
+      ejemplares: Object.assign({}, ejemplaresPorEstado),
       metodo: metodoPlagaActual,
       metodoOtroTexto: document.getElementById('pf-metodo-otro-texto').value,
       obs: document.getElementById('pf-obs').value
     });
   }
 
-  ['pf-monitor','pf-monitor-otro','pf-campo','pf-cuartel','pf-hileras','pf-variedad','pf-metodo-otro-texto','pf-obs'].forEach(function(id){
+  ['pf-monitor','pf-monitor-otro','pf-campo','pf-cuartel','pf-hileras','pf-variedad','pf-estructura','pf-metodo-otro-texto','pf-obs'].forEach(function(id){
     var el = document.getElementById(id);
     if(el){ el.addEventListener('input', guardarBorradorPlagaActual); el.addEventListener('change', guardarBorradorPlagaActual); }
   });
@@ -1755,8 +2057,16 @@
     document.getElementById('pf-cuartel').value = d.cuartel || '';
     document.getElementById('pf-hileras').value = d.hileras || '';
     document.getElementById('pf-variedad').value = d.variedad || '';
+    document.getElementById('pf-estructura').value = d.estructura || 'Hoja';
     document.getElementById('pf-obs').value = d.obs || '';
     document.getElementById('pf-metodo-otro-texto').value = d.metodoOtroTexto || '';
+
+    estadosSeleccionados = (d.estados || []).slice();
+    ejemplaresPorEstado = Object.assign({}, d.ejemplares || {});
+    ESTADOS_PLAGA.forEach(function(estado){
+      document.querySelector('.estado-btn[data-estado="'+estado+'"]').classList.toggle('is-on', estadosSeleccionados.indexOf(estado) !== -1);
+    });
+    renderEjemplaresInputs();
 
     setMetodoPlaga(d.metodo || 'En X');
 
@@ -1777,6 +2087,9 @@
       cuartel: document.getElementById('pf-cuartel').value,
       hileras: document.getElementById('pf-hileras').value,
       variedad: document.getElementById('pf-variedad').value,
+      estructura: document.getElementById('pf-estructura').value,
+      estados: estadosSeleccionados.slice(),
+      ejemplares: Object.assign({}, ejemplaresPorEstado),
       metodo: metodoTexto,
       obs: document.getElementById('pf-obs').value
     };
@@ -1808,6 +2121,9 @@
         cuartel: datos.cuartel,
         variedad: datos.variedad,
         hileras: datos.hileras,
+        estructura: datos.estructura,
+        estados: datos.estados.join(', '),
+        ejemplares: datos.ejemplares,
         metodo: datos.metodo,
         observaciones: datos.obs || null
       }).then(function(res){
@@ -1849,8 +2165,10 @@
       doc.setFont('helvetica','normal');
       doc.setFontSize(11);
       doc.setTextColor(20,33,28);
-      doc.text(valor || '—', margin + 42, y);
-      y += 8;
+      var valWidth = pageW - margin - (margin + 42);
+      var lineas = doc.splitTextToSize(valor || '—', valWidth);
+      doc.text(lineas, margin + 42, y);
+      y += Math.max(8, lineas.length * 5.6);
     }
 
     fila('Monitor', datos.monitor);
@@ -1858,6 +2176,11 @@
     fila('Cuartel', datos.cuartel);
     fila('Variedad', datos.variedad);
     fila('Hileras', datos.hileras);
+    fila('Estructura', datos.estructura);
+    var estadosTexto = datos.estados.length
+      ? datos.estados.map(function(e){ return e + ' (' + (datos.ejemplares[e] || '0') + ')'; }).join('  ·  ')
+      : '—';
+    fila('Estado (N° ejemp.)', estadosTexto);
     fila('Método', datos.metodo);
 
     y += 2;
