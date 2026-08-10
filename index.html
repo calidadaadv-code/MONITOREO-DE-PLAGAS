@@ -1875,7 +1875,10 @@
     conDatos.forEach(function(f){
       var reg = REGISTROS[f.t.num];
       var hasPhoto = !!(reg && reg.foto);
-      var textWidth = pageW - margin*2 - (hasPhoto ? 34 : 0);
+      var obsLower = (f.obs || '').toLowerCase();
+      var esAplicado = obsLower.indexOf('aplicad') !== -1;
+      var marcaAncho = f.obs ? 5 : 0;
+      var textWidth = pageW - margin*2 - (hasPhoto ? 34 : 0) - marcaAncho;
       var obsLines = f.obs ? doc.splitTextToSize('Obs: ' + f.obs, textWidth) : [];
       var textH = 11 + obsLines.length * 4.2;
       var blockH = Math.max(textH, hasPhoto ? 30 : 0) + 8;
@@ -1897,8 +1900,20 @@
       y += 5;
 
       if(obsLines.length){
+        doc.setFont('helvetica','bold');
         doc.setFontSize(9);
-        doc.text(obsLines, margin, y);
+        if(esAplicado){
+          doc.setFillColor(192,57,43);
+          doc.rect(margin, y-2.7, 3, 3, 'F');
+          doc.setTextColor(192,57,43);
+          doc.text(obsLines, margin + 5, y);
+        } else {
+          doc.setFillColor(31,110,140);
+          doc.rect(margin, y-2.7, 3, 3, 'F');
+          doc.setTextColor(31,110,140);
+          doc.text(obsLines, margin + 5, y);
+        }
+        doc.setFont('helvetica','normal');
         y += obsLines.length * 4.2;
       }
 
