@@ -1310,6 +1310,18 @@
         : 'Ninguna — todas las trampas están instaladas.';
       var lineas = doc.splitTextToSize(texto, pageW - margin*2);
       doc.text(lineas, margin, yy);
+      yy += lineas.length * 4 + 10;
+
+      doc.setDrawColor(220,220,212);
+      doc.line(margin, yy, pageW-margin, yy);
+      yy += 6;
+      doc.setFont('helvetica','italic');
+      doc.setFontSize(8);
+      doc.setTextColor(120,120,120);
+      var leyendaTexto3 = 'Todas las decisiones de manejo quedan a disposición del Gerente Agrícola y el Jefe de Aplicaciones.';
+      var leyendaLineas3 = doc.splitTextToSize(leyendaTexto3, pageW - margin*2);
+      doc.text(leyendaLineas3, pageW/2, yy, {align:'center'});
+
       return yy;
     }
 
@@ -1944,7 +1956,20 @@
       var pendLines = doc.splitTextToSize(pendientes, pageW - margin*2);
       checkPageBreak(pendLines.length * 4);
       doc.text(pendLines, margin, y);
+      y += pendLines.length * 4;
     }
+
+    checkPageBreak(16);
+    y += 4;
+    doc.setDrawColor(220,220,212);
+    doc.line(margin, y, pageW-margin, y);
+    y += 6;
+    doc.setFont('helvetica','italic');
+    doc.setFontSize(8);
+    doc.setTextColor(120,120,120);
+    var leyendaTexto = 'Todas las decisiones de manejo quedan a disposición del Gerente Agrícola y el Jefe de Aplicaciones.';
+    var leyendaLineas = doc.splitTextToSize(leyendaTexto, pageW - margin*2);
+    doc.text(leyendaLineas, pageW/2, y, {align:'center'});
 
     return doc;
   }
@@ -2213,6 +2238,17 @@
     doc.setTextColor(20,33,28);
     var obsLines = doc.splitTextToSize(datos.obs || 'Sin observaciones.', pageW - margin*2);
     doc.text(obsLines, margin, y);
+    y += obsLines.length * 5.5 + 10;
+
+    doc.setDrawColor(220,220,212);
+    doc.line(margin, y, pageW-margin, y);
+    y += 6;
+    doc.setFont('helvetica','italic');
+    doc.setFontSize(8);
+    doc.setTextColor(120,120,120);
+    var leyendaTexto2 = 'Todas las decisiones de manejo quedan a disposición del Gerente Agrícola y el Jefe de Aplicaciones.';
+    var leyendaLineas2 = doc.splitTextToSize(leyendaTexto2, pageW - margin*2);
+    doc.text(leyendaLineas2, pageW/2, y, {align:'center'});
 
     return doc;
   }
