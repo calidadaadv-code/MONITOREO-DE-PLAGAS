@@ -279,9 +279,16 @@
   .field-row{ display:flex; gap:12px; }
   .field-row .field{ flex:1; }
 
-  .field input[type=file]{
-    width:100%; border:1.6px dashed rgba(20,33,28,0.22); background:#FBFAF5; border-radius:11px;
-    padding:14px 12px; font-family:'Inter',sans-serif; font-size:13px; color:var(--ink-soft); cursor:pointer;
+  .foto-picker{
+    display:flex; align-items:center; justify-content:center; gap:9px;
+    width:100%; border:1.6px dashed rgba(20,33,28,0.25); background:#FBFAF5; border-radius:12px;
+    padding:18px 12px; font-family:'Space Grotesk',sans-serif; font-weight:600; font-size:13.5px;
+    color:var(--ink-soft); cursor:pointer; box-sizing:border-box;
+  }
+  .foto-picker:active{ background:#F1EEE1; }
+  .foto-picker-plus{
+    width:26px; height:26px; border-radius:50%; background:rgba(20,33,28,0.07); color:var(--ink-soft);
+    display:flex; align-items:center; justify-content:center; font-size:16px; font-weight:400; flex:none;
   }
   #f-foto-preview-wrap, #pf-foto-preview-wrap{ margin-top:10px; display:flex; align-items:center; gap:12px; }
   #f-foto-preview, #pf-foto-preview{ width:64px; height:64px; border-radius:10px; object-fit:cover; border:1px solid rgba(20,33,28,0.12); }
@@ -659,8 +666,12 @@
       </div>
 
       <div class="field">
-        <label for="pf-foto">Foto (opcional)</label>
-        <input type="file" id="pf-foto" accept="image/*" onchange="onFotoSeleccionadaPlaga(event)">
+        <label>Foto (opcional)</label>
+        <input type="file" id="pf-foto" accept="image/*" onchange="onFotoSeleccionadaPlaga(event)" style="display:none;">
+        <label for="pf-foto" class="foto-picker" id="pf-foto-picker">
+          <span class="foto-picker-plus">+</span>
+          Agregar foto
+        </label>
         <div id="pf-foto-preview-wrap" style="display:none;">
           <img id="pf-foto-preview" alt="Vista previa de la foto">
           <button type="button" class="foto-quitar" onclick="quitarFotoPlaga()">Quitar foto</button>
@@ -942,8 +953,12 @@
     </div>
 
     <div class="field">
-      <label for="f-foto">Foto de la trampa (opcional)</label>
-      <input type="file" id="f-foto" accept="image/*" onchange="onFotoSeleccionada(event)">
+      <label>Foto de la trampa (opcional)</label>
+      <input type="file" id="f-foto" accept="image/*" onchange="onFotoSeleccionada(event)" style="display:none;">
+      <label for="f-foto" class="foto-picker" id="f-foto-picker">
+        <span class="foto-picker-plus">+</span>
+        Agregar foto
+      </label>
       <div id="f-foto-preview-wrap" style="display:none;">
         <img id="f-foto-preview" alt="Vista previa de la foto">
         <button type="button" class="foto-quitar" onclick="quitarFoto()">Quitar foto</button>
@@ -1454,6 +1469,7 @@
       fotoActualDataUrl = e.target.result;
       document.getElementById('f-foto-preview').src = fotoActualDataUrl;
       document.getElementById('f-foto-preview-wrap').style.display = 'flex';
+      document.getElementById('f-foto-picker').style.display = 'none';
     };
     reader.readAsDataURL(file);
   }
@@ -1463,6 +1479,7 @@
     fotoActualFile = null;
     document.getElementById('f-foto').value = '';
     document.getElementById('f-foto-preview-wrap').style.display = 'none';
+    document.getElementById('f-foto-picker').style.display = 'flex';
   }
 
   function todayStr(){
@@ -1599,9 +1616,11 @@
         fotoActualDataUrl = borrador.foto;
         document.getElementById('f-foto-preview').src = borrador.foto;
         document.getElementById('f-foto-preview-wrap').style.display = 'flex';
+        document.getElementById('f-foto-picker').style.display = 'none';
       } else {
         fotoActualDataUrl = null;
         document.getElementById('f-foto-preview-wrap').style.display = 'none';
+        document.getElementById('f-foto-picker').style.display = 'flex';
       }
 
       document.getElementById('sheet-overlay').classList.add('is-open');
@@ -1627,9 +1646,11 @@
       fotoActualDataUrl = prev.foto;
       document.getElementById('f-foto-preview').src = prev.foto;
       document.getElementById('f-foto-preview-wrap').style.display = 'flex';
+      document.getElementById('f-foto-picker').style.display = 'none';
     } else {
       fotoActualDataUrl = null;
       document.getElementById('f-foto-preview-wrap').style.display = 'none';
+      document.getElementById('f-foto-picker').style.display = 'flex';
     }
 
     document.getElementById('sheet-overlay').classList.add('is-open');
@@ -2048,6 +2069,7 @@
       fotoPlagaDataUrl = e.target.result;
       document.getElementById('pf-foto-preview').src = fotoPlagaDataUrl;
       document.getElementById('pf-foto-preview-wrap').style.display = 'flex';
+      document.getElementById('pf-foto-picker').style.display = 'none';
       guardarBorradorPlagaActual();
     };
     reader.readAsDataURL(file);
@@ -2058,6 +2080,7 @@
     fotoPlagaFile = null;
     document.getElementById('pf-foto').value = '';
     document.getElementById('pf-foto-preview-wrap').style.display = 'none';
+    document.getElementById('pf-foto-picker').style.display = 'flex';
     guardarBorradorPlagaActual();
   }
 
@@ -2172,9 +2195,11 @@
       fotoPlagaDataUrl = d.foto;
       document.getElementById('pf-foto-preview').src = d.foto;
       document.getElementById('pf-foto-preview-wrap').style.display = 'flex';
+      document.getElementById('pf-foto-picker').style.display = 'none';
     } else {
       fotoPlagaDataUrl = null;
       document.getElementById('pf-foto-preview-wrap').style.display = 'none';
+      document.getElementById('pf-foto-picker').style.display = 'flex';
     }
 
     goTo('view-plaga-form');
