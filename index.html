@@ -283,8 +283,8 @@
     width:100%; border:1.6px dashed rgba(20,33,28,0.22); background:#FBFAF5; border-radius:11px;
     padding:14px 12px; font-family:'Inter',sans-serif; font-size:13px; color:var(--ink-soft); cursor:pointer;
   }
-  #f-foto-preview-wrap{ margin-top:10px; display:flex; align-items:center; gap:12px; }
-  #f-foto-preview{ width:64px; height:64px; border-radius:10px; object-fit:cover; border:1px solid rgba(20,33,28,0.12); }
+  #f-foto-preview-wrap, #pf-foto-preview-wrap{ margin-top:10px; display:flex; align-items:center; gap:12px; }
+  #f-foto-preview, #pf-foto-preview{ width:64px; height:64px; border-radius:10px; object-fit:cover; border:1px solid rgba(20,33,28,0.12); }
   .foto-quitar{
     border:none; background:rgba(140,47,30,0.08); color:#8C2F1E; font-family:'Space Grotesk',sans-serif;
     font-weight:600; font-size:12.5px; padding:8px 12px; border-radius:9px; cursor:pointer;
@@ -604,7 +604,7 @@
       <div class="field-row">
         <div class="field">
           <label for="pf-cuartel">Cuartel</label>
-          <input type="text" id="pf-cuartel" placeholder="Ej: 7A">
+          <input type="text" id="pf-cuartel" placeholder="Ej: 7A" oninput="autocompletarVariedad()">
         </div>
         <div class="field">
           <label for="pf-hileras">Hileras</label>
@@ -656,6 +656,15 @@
       <div class="field" id="pf-metodo-otro-wrap" style="display:none;">
         <label for="pf-metodo-otro-texto">Especificar método</label>
         <input type="text" id="pf-metodo-otro-texto" placeholder="Escribir método">
+      </div>
+
+      <div class="field">
+        <label for="pf-foto">Foto (opcional)</label>
+        <input type="file" id="pf-foto" accept="image/*" capture="environment" onchange="onFotoSeleccionadaPlaga(event)">
+        <div id="pf-foto-preview-wrap" style="display:none;">
+          <img id="pf-foto-preview" alt="Vista previa de la foto">
+          <button type="button" class="foto-quitar" onclick="quitarFotoPlaga()">Quitar foto</button>
+        </div>
       </div>
 
       <div class="field">
@@ -2001,11 +2010,56 @@
     }
   }
   // ---- Formulario genérico de monitoreo de plagas ----
+  // ---- Variedad automática según el cuartel ----
+  var CUARTEL_VARIEDAD = {
+    '6':'Lapins', '10':'Lapins', '11':'Santina', '12':'Santina', '15':'Lapins', '17':'Lapins', '18':'Lapins',
+    '19':'Lapins', '20':'Santina', '21':'Santina', '22':'Lapins', '23':'Santina', '24':'Lapins', '25':'Santina',
+    '26':'Santina', '29':'Santina',
+    '1':'Luciana', '2':'Garcica', '3':'Artic Red', '4':'Artic Red', '5':'Artic Red', '7B':'Gartairo', '8':'Luciana',
+    '9':'Garcica', '13':'Gardeta', '30':'Gardeta', '31':'Kinolea', '32':'Andesnecdos',
+    '27':'Soledora', '34':'Soledora', '16':'Sweet September',
+    '28':'Angeleno', '33':'Sweet Pekeetah', '7A':'Sweet Pekeetah'
+  };
+
+  function autocompletarVariedad(){
+    var cuartelRaw = document.getElementById('pf-cuartel').value.trim();
+    var key = cuartelRaw.toUpperCase().replace(/\s+/g,'');
+    var variedad = CUARTEL_VARIEDAD[key];
+    if(variedad){
+      document.getElementById('pf-variedad').value = variedad;
+      guardarBorradorPlagaActual();
+    }
+  }
+
   var plagaActual = null; // {nombre, icono}
   var plagaFormOrigen = 'view-plagas-lista';
   var metodoPlagaActual = null;
   var estadosSeleccionados = [];
   var ejemplaresPorEstado = {};
+  var fotoPlagaDataUrl = null;
+  var fotoPlagaFile = null;
+
+  function onFotoSeleccionadaPlaga(evt){
+    var file = evt.target.files && evt.target.files[0];
+    if(!file) return;
+    fotoPlagaFile = file;
+    var reader = new FileReader();
+    reader.onload = function(e){
+      fotoPlagaDataUrl = e.target.result;
+      document.getElementById('pf-foto-preview').src = fotoPlagaDataUrl;
+      document.getElementById('pf-foto-preview-wrap').style.display = 'flex';
+      guardarBorradorPlagaActual();
+    };
+    reader.readAsDataURL(file);
+  }
+
+  function quitarFotoPlaga(){
+    fotoPlagaDataUrl = null;
+    fotoPlagaFile = null;
+    document.getElementById('pf-foto').value = '';
+    document.getElementById('pf-foto-preview-wrap').style.display = 'none';
+    guardarBorradorPlagaActual();
+  }
 
   var ESTADOS_PLAGA = ['Huevo','Larva','Pupa','Ninfa','Adulto'];
 
@@ -2071,7 +2125,8 @@
       ejemplares: Object.assign({}, ejemplaresPorEstado),
       metodo: metodoPlagaActual,
       metodoOtroTexto: document.getElementById('pf-metodo-otro-texto').value,
-      obs: document.getElementById('pf-obs').value
+      obs: document.getElementById('pf-obs').value,
+      foto: fotoPlagaDataUrl
     });
   }
 
@@ -2111,6 +2166,17 @@
 
     setMetodoPlaga(d.metodo || 'En X');
 
+    document.getElementById('pf-foto').value = '';
+    fotoPlagaFile = null;
+    if(d.foto){
+      fotoPlagaDataUrl = d.foto;
+      document.getElementById('pf-foto-preview').src = d.foto;
+      document.getElementById('pf-foto-preview-wrap').style.display = 'flex';
+    } else {
+      fotoPlagaDataUrl = null;
+      document.getElementById('pf-foto-preview-wrap').style.display = 'none';
+    }
+
     goTo('view-plaga-form');
   }
 
@@ -2132,7 +2198,8 @@
       estados: estadosSeleccionados.slice(),
       ejemplares: Object.assign({}, ejemplaresPorEstado),
       metodo: metodoTexto,
-      obs: document.getElementById('pf-obs').value
+      obs: document.getElementById('pf-obs').value,
+      foto: fotoPlagaDataUrl
     };
   }
 
@@ -2153,30 +2220,49 @@
       }
     }
 
-    if(sb){
-      sb.from('plagas_monitoreos').insert({
-        plaga: datos.plaga,
-        fecha: datos.fecha,
-        monitor: datos.monitor,
-        campo: datos.campo,
-        cuartel: datos.cuartel,
-        variedad: datos.variedad,
-        hileras: datos.hileras,
-        estructura: datos.estructura,
-        estados: datos.estados.join(', '),
-        ejemplares: datos.ejemplares,
-        metodo: datos.metodo,
-        observaciones: datos.obs || null
-      }).then(function(res){
+    function insertarConFoto(fotoUrl){
+      if(sb){
+        sb.from('plagas_monitoreos').insert({
+          plaga: datos.plaga,
+          fecha: datos.fecha,
+          monitor: datos.monitor,
+          campo: datos.campo,
+          cuartel: datos.cuartel,
+          variedad: datos.variedad,
+          hileras: datos.hileras,
+          estructura: datos.estructura,
+          estados: datos.estados.join(', '),
+          ejemplares: datos.ejemplares,
+          metodo: datos.metodo,
+          foto_url: fotoUrl || null,
+          observaciones: datos.obs || null
+        }).then(function(res){
+          if(res.error){
+            alert('No se pudo guardar en Supabase: ' + res.error.message);
+            terminar(false);
+          } else {
+            terminar(true);
+          }
+        });
+      } else {
+        terminar(true);
+      }
+    }
+
+    if(sb && fotoPlagaFile){
+      var path = 'plaga-' + datos.plaga.replace(/\s+/g,'_') + '-' + Date.now() + '-' + fotoPlagaFile.name.replace(/[^a-zA-Z0-9.]/g,'_');
+      sb.storage.from(BUCKET_FOTOS).upload(path, fotoPlagaFile).then(function(res){
         if(res.error){
-          alert('No se pudo guardar en Supabase: ' + res.error.message);
-          terminar(false);
-        } else {
-          terminar(true);
+          btn.textContent = textoOriginal;
+          btn.disabled = false;
+          alert('No se pudo subir la foto: ' + res.error.message);
+          return;
         }
+        var pub = sb.storage.from(BUCKET_FOTOS).getPublicUrl(path);
+        insertarConFoto(pub.data.publicUrl);
       });
     } else {
-      terminar(true);
+      insertarConFoto(fotoPlagaDataUrl);
     }
   }
 
@@ -2223,6 +2309,25 @@
       : '—';
     fila('Estado (N° ejemp.)', estadosTexto);
     fila('Método', datos.metodo);
+
+    if(datos.foto){
+      y += 2;
+      doc.setFont('helvetica','bold');
+      doc.setFontSize(10);
+      doc.setTextColor(90,90,90);
+      doc.text('Foto', margin, y);
+      y += 4;
+      try{
+        var fmtFoto = datos.foto.indexOf('image/png') !== -1 ? 'PNG' : 'JPEG';
+        var fotoW = 55, fotoH = 55;
+        doc.addImage(datos.foto, fmtFoto, margin, y, fotoW, fotoH);
+        y += fotoH + 8;
+      } catch(e){
+        doc.setFont('helvetica','italic'); doc.setFontSize(8.5); doc.setTextColor(140,90,32);
+        doc.text('(No se pudo incluir la imagen)', margin, y);
+        y += 8;
+      }
+    }
 
     y += 2;
     doc.setDrawColor(210,210,200);
