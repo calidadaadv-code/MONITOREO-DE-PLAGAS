@@ -660,7 +660,7 @@
 
       <div class="field">
         <label for="pf-foto">Foto (opcional)</label>
-        <input type="file" id="pf-foto" accept="image/*" capture="environment" onchange="onFotoSeleccionadaPlaga(event)">
+        <input type="file" id="pf-foto" accept="image/*" onchange="onFotoSeleccionadaPlaga(event)">
         <div id="pf-foto-preview-wrap" style="display:none;">
           <img id="pf-foto-preview" alt="Vista previa de la foto">
           <button type="button" class="foto-quitar" onclick="quitarFotoPlaga()">Quitar foto</button>
@@ -943,7 +943,7 @@
 
     <div class="field">
       <label for="f-foto">Foto de la trampa (opcional)</label>
-      <input type="file" id="f-foto" accept="image/*" capture="environment" onchange="onFotoSeleccionada(event)">
+      <input type="file" id="f-foto" accept="image/*" onchange="onFotoSeleccionada(event)">
       <div id="f-foto-preview-wrap" style="display:none;">
         <img id="f-foto-preview" alt="Vista previa de la foto">
         <button type="button" class="foto-quitar" onclick="quitarFoto()">Quitar foto</button>
