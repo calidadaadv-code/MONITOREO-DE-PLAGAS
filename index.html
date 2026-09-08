@@ -157,6 +157,7 @@
   }
   .card-ofm{ background: linear-gradient(135deg, #E8A23D 0%, #B45A22 100%); }
   .card-mon{ background: linear-gradient(135deg, #3F8FC9 0%, #235A8C 100%); }
+  .card-inf{ background: linear-gradient(135deg, #9B6FC9 0%, #5C3A8C 100%); }
 
   .option-icon-vivid{
     width:48px; height:48px; border-radius:12px; flex:none; position:relative; z-index:1;
@@ -488,9 +489,75 @@
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
           </span>
         </button>
+
+        <button class="option-card option-card--vivid card-inf" type="button" onclick="showInformes()">
+          <span class="option-icon-vivid">🗂️</span>
+          <span class="option-text">
+            <p class="option-title">Informes</p>
+            <p class="option-sub">Revisar informes generados anteriormente, por fecha</p>
+          </span>
+          <span class="option-chev">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+          </span>
+        </button>
       </div>
 
       <p class="foot-note">Registro de monitoreo en terreno · datos sincronizados</p>
+    </div>
+  </section>
+
+  <!-- ---------- PANTALLA 2F: INFORMES (HISTORIAL POR FECHA) ---------- -->
+  <section class="view" id="view-informes">
+    <div class="topbar">
+      <button class="btn-back" type="button" onclick="goTo('view-seleccion')" aria-label="Volver">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+      </button>
+      <span class="topbar-label">Informes</span>
+    </div>
+
+    <div class="content">
+      <h2 class="campo-heading">Informes anteriores</h2>
+      <p class="campo-sub">Se arman de nuevo con los datos ya guardados.</p>
+
+      <div class="segmented">
+        <button id="inf-tab-trampas" class="is-on" type="button" onclick="setInformesTab('trampas')">Trampas OFM</button>
+        <button id="inf-tab-plagas" type="button" onclick="setInformesTab('plagas')">Plagas/Enferm.</button>
+      </div>
+
+      <div class="panel is-on" id="panel-informes-trampas" style="flex:1;overflow-y:auto;padding-bottom:20px;">
+        <p class="foot-note" style="text-align:left;">Cargando…</p>
+      </div>
+      <div class="panel" id="panel-informes-plagas" style="flex:1;overflow-y:auto;padding-bottom:20px;">
+        <p class="foot-note" style="text-align:left;">Cargando…</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ---------- PANTALLA 2G: DETALLE DE UN INFORME DE PLAGA HISTÓRICO ---------- -->
+  <section class="view" id="view-informe-plaga-detalle">
+    <div class="topbar">
+      <button class="btn-back" type="button" onclick="goTo('view-informes')" aria-label="Volver">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+      </button>
+      <span class="topbar-label">Informes · Plagas</span>
+    </div>
+
+    <div class="content">
+      <h2 class="campo-heading" id="infd-titulo">Plaga</h2>
+      <p class="campo-sub" id="infd-sub">Fecha · Campo</p>
+
+      <div id="panel-informe-detalle" style="margin-top:6px;"></div>
+
+      <div class="resumen-actions" style="margin-top:16px;">
+        <button class="btn-resumen-secondary" type="button" onclick="descargarInformePlagaHistoricoActual()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+          Descargar informe
+        </button>
+        <button class="btn-resumen-primary" type="button" onclick="compartirInformePlagaHistoricoActual()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.6" y1="13.5" x2="15.4" y2="17.5"/><line x1="15.4" y1="6.5" x2="8.6" y2="10.5"/></svg>
+          Compartir
+        </button>
+      </div>
     </div>
   </section>
 
@@ -629,6 +696,7 @@
         <select id="pf-estructura">
           <option value="Raíz">Raíz</option>
           <option value="Tallo">Tallo</option>
+          <option value="Ramilla">Ramilla</option>
           <option value="Hoja">Hoja</option>
           <option value="Flor">Flor</option>
           <option value="Frutos">Frutos</option>
@@ -649,6 +717,21 @@
       <div class="field" id="pf-ejemplares-wrap" style="display:none;">
         <label>Cantidad de ejemplares encontrados</label>
         <div id="pf-ejemplares-inputs"></div>
+      </div>
+
+      <div class="field-row">
+        <div class="field">
+          <label for="pf-total-estructuras">Total estructuras revisadas</label>
+          <input type="number" min="0" id="pf-total-estructuras" placeholder="0" oninput="calcularPorcentajeDano()">
+        </div>
+        <div class="field">
+          <label for="pf-estructuras-danadas">N° con plaga/daño</label>
+          <input type="number" min="0" id="pf-estructuras-danadas" placeholder="0" oninput="calcularPorcentajeDano()">
+        </div>
+      </div>
+      <div class="field">
+        <label>% de daño</label>
+        <input type="text" id="pf-porcentaje-dano" readonly placeholder="Se calcula solo" style="background:#F0EEE4;color:var(--ink-soft);">
       </div>
 
       <div class="field">
@@ -1784,38 +1867,47 @@
   }
 
   // ---- Resumen para jefaturas (generado desde REGISTROS) ----
-  function datosResumenHoy(){
-    var hoy = todayStr();
+  var resumenFechaActual = null;
+  var resumenRegistrosActual = null;
+
+  function datosResumenHoy(fecha, registrosFuente){
+    var dia = fecha || todayStr();
+    var fuente = registrosFuente || REGISTROS;
     return TRAMPAS.map(function(t){
-      var reg = REGISTROS[t.num];
-      var esHoy = reg && reg.fecha === hoy;
+      var reg = fuente[t.num];
+      var esDia = reg && reg.fecha === dia;
       return {
         t: t,
-        tieneDato: !!esHoy,
+        tieneDato: !!esDia,
         fecha: reg ? reg.fecha : '',
         monitor: reg ? reg.monitor : '',
-        captura: esHoy ? (reg.cantidad || '0') : '',
+        captura: esDia ? (reg.cantidad || '0') : '',
         obs: reg ? reg.obs : ''
       };
     });
   }
 
-  function showResumen(){
-    var filas = datosResumenHoy();
+  function showResumen(fecha, registrosFuente){
+    resumenFechaActual = fecha || todayStr();
+    resumenRegistrosActual = registrosFuente || REGISTROS;
+
+    var filas = datosResumenHoy(resumenFechaActual, resumenRegistrosActual);
     var conDatos = filas.filter(function(f){ return f.tieneDato; });
+    var esHoy = resumenFechaActual === todayStr();
 
     document.getElementById('resumen-sub').textContent =
-      conDatos.length + ' de ' + TRAMPAS.length + ' trampas con datos registrados hoy (' + formatFechaCorta(todayStr()) + ')';
+      conDatos.length + ' de ' + TRAMPAS.length + ' trampas con datos registrados ' +
+      (esHoy ? 'hoy' : 'el') + ' (' + formatFechaCorta(resumenFechaActual) + ')';
 
     var totalCapturas = conDatos.reduce(function(acc,f){ return acc + (parseInt(f.captura,10) || 0); }, 0);
 
-    var resumenHtml = '<div class="resumen-summary"><span class="lbl">Total polillas capturadas hoy</span><span class="n">' + totalCapturas + '</span></div>';
+    var resumenHtml = '<div class="resumen-summary"><span class="lbl">Total polillas capturadas</span><span class="n">' + totalCapturas + '</span></div>';
 
     resumenHtml += filas.map(function(f){
       var cap = f.tieneDato ? f.captura : '—';
       var sub = f.tieneDato
         ? ('Monitor: ' + (f.monitor || '—') + (f.obs ? ' · ' + f.obs : ''))
-        : 'Sin revisión registrada hoy';
+        : 'Sin revisión registrada';
       return '<div class="resumen-row' + (f.tieneDato ? '' : ' is-empty') + '">' +
         '<span class="resumen-cap">' + cap + '</span>' +
         '<span class="cambio-info">' +
@@ -1830,7 +1922,8 @@
   }
 
   function construirInformePDF(){
-    var filas = datosResumenHoy();
+    var fechaInforme = resumenFechaActual || todayStr();
+    var filas = datosResumenHoy(fechaInforme, resumenRegistrosActual);
     var conDatos = filas.filter(function(f){ return f.tieneDato; });
     var sinDatos = filas.filter(function(f){ return !f.tieneDato; });
     var totalCapturas = conDatos.reduce(function(acc,f){ return acc + (parseInt(f.captura,10)||0); }, 0);
@@ -1850,7 +1943,7 @@
       doc.text('INFORME DE REVISIÓN DE TRAMPAS OFM', margin, 14);
       doc.setFont('helvetica','normal');
       doc.setFontSize(9.5);
-      doc.text('Agrícola Agua del Valle SPA · Fundo Lo Ovalle · ' + formatFechaCorta(todayStr()), margin, 20);
+      doc.text('Agrícola Agua del Valle SPA · Fundo Lo Ovalle · ' + formatFechaCorta(fechaInforme), margin, 20);
     }
 
     function checkPageBreak(minSpace){
@@ -1867,7 +1960,7 @@
     doc.setTextColor(20,33,28);
     doc.setFont('helvetica','bold');
     doc.setFontSize(11);
-    doc.text(conDatos.length + ' de ' + TRAMPAS.length + ' trampas revisadas hoy   ·   Total capturas: ' + totalCapturas, margin, y);
+    doc.text(conDatos.length + ' de ' + TRAMPAS.length + ' trampas revisadas   ·   Total capturas: ' + totalCapturas, margin, y);
     y += 8;
 
     // Cuadro resumen por campo
@@ -1916,7 +2009,7 @@
     }
 
     conDatos.forEach(function(f){
-      var reg = REGISTROS[f.t.num];
+      var reg = (resumenRegistrosActual || REGISTROS)[f.t.num];
       var hasPhoto = !!(reg && reg.foto);
       var obsLower = (f.obs || '').toLowerCase();
       var esAplicado = obsLower.indexOf('aplicad') !== -1;
@@ -2006,29 +2099,61 @@
   }
 
   function nombreArchivoResumen(){
-    return 'Informe_Trampas_OFM_' + todayStr() + '.pdf';
+    return 'Informe_Trampas_OFM_' + (resumenFechaActual || todayStr()) + '.pdf';
+  }
+
+  function cargarImagenComoDataURL(url, cb){
+    if(!url){ cb(null); return; }
+    if(url.indexOf('data:') === 0){ cb(url); return; }
+    fetch(url).then(function(r){ return r.blob(); }).then(function(blob){
+      var reader = new FileReader();
+      reader.onload = function(e){ cb(e.target.result); };
+      reader.onerror = function(){ cb(null); };
+      reader.readAsDataURL(blob);
+    }).catch(function(){ cb(null); });
+  }
+
+  function precargarFotosRegistros(registrosMap, cb){
+    var nums = Object.keys(registrosMap).filter(function(n){
+      return registrosMap[n] && registrosMap[n].foto && registrosMap[n].foto.indexOf('data:') !== 0;
+    });
+    if(!nums.length){ cb(); return; }
+    var restante = nums.length;
+    nums.forEach(function(n){
+      cargarImagenComoDataURL(registrosMap[n].foto, function(dataUrl){
+        registrosMap[n].foto = dataUrl;
+        restante--;
+        if(restante === 0) cb();
+      });
+    });
   }
 
   function descargarResumen(){
-    var doc = construirInformePDF();
-    doc.save(nombreArchivoResumen());
+    var fuente = resumenRegistrosActual || REGISTROS;
+    precargarFotosRegistros(fuente, function(){
+      var doc = construirInformePDF();
+      doc.save(nombreArchivoResumen());
+    });
   }
 
   function compartirResumen(){
-    var doc = construirInformePDF();
-    var blob = doc.output('blob');
-    var file = new File([blob], nombreArchivoResumen(), {type:'application/pdf'});
+    var fuente = resumenRegistrosActual || REGISTROS;
+    precargarFotosRegistros(fuente, function(){
+      var doc = construirInformePDF();
+      var blob = doc.output('blob');
+      var file = new File([blob], nombreArchivoResumen(), {type:'application/pdf'});
 
-    if(navigator.canShare && navigator.canShare({files:[file]})){
-      navigator.share({
-        files: [file],
-        title: 'Informe Trampas OFM',
-        text: 'Informe de revisión de trampas OFM · ' + formatFechaCorta(todayStr())
-      }).catch(function(){ /* usuario canceló */ });
-    } else {
-      doc.save(nombreArchivoResumen());
-      alert('Se descargó el informe en PDF. Este dispositivo no permite compartir el archivo directo, así que adjuntalo manualmente en el chat de WhatsApp.');
-    }
+      if(navigator.canShare && navigator.canShare({files:[file]})){
+        navigator.share({
+          files: [file],
+          title: 'Informe Trampas OFM',
+          text: 'Informe de revisión de trampas OFM · ' + formatFechaCorta(resumenFechaActual || todayStr())
+        }).catch(function(){ /* usuario canceló */ });
+      } else {
+        doc.save(nombreArchivoResumen());
+        alert('Se descargó el informe en PDF. Este dispositivo no permite compartir el archivo directo, así que adjuntalo manualmente en el chat de WhatsApp.');
+      }
+    });
   }
   // ---- Formulario genérico de monitoreo de plagas ----
   // ---- Variedad automática según el cuartel ----
@@ -2134,6 +2259,19 @@
     guardarBorradorPlagaActual();
   }
 
+  function calcularPorcentajeDano(){
+    var total = parseInt(document.getElementById('pf-total-estructuras').value, 10) || 0;
+    var danadas = parseInt(document.getElementById('pf-estructuras-danadas').value, 10) || 0;
+    var out = document.getElementById('pf-porcentaje-dano');
+    if(total > 0){
+      var pct = (danadas / total) * 100;
+      out.value = pct.toFixed(1) + '%';
+    } else {
+      out.value = '';
+    }
+    guardarBorradorPlagaActual();
+  }
+
   function guardarBorradorPlagaActual(){
     if(!plagaActual) return;
     guardarBorrador('p', plagaActual.nombre, {
@@ -2146,6 +2284,8 @@
       estructura: document.getElementById('pf-estructura').value,
       estados: estadosSeleccionados.slice(),
       ejemplares: Object.assign({}, ejemplaresPorEstado),
+      totalEstructuras: document.getElementById('pf-total-estructuras').value,
+      estructurasDanadas: document.getElementById('pf-estructuras-danadas').value,
       metodo: metodoPlagaActual,
       metodoOtroTexto: document.getElementById('pf-metodo-otro-texto').value,
       obs: document.getElementById('pf-obs').value,
@@ -2179,6 +2319,9 @@
     document.getElementById('pf-estructura').value = d.estructura || 'Hoja';
     document.getElementById('pf-obs').value = d.obs || '';
     document.getElementById('pf-metodo-otro-texto').value = d.metodoOtroTexto || '';
+    document.getElementById('pf-total-estructuras').value = d.totalEstructuras || '';
+    document.getElementById('pf-estructuras-danadas').value = d.estructurasDanadas || '';
+    calcularPorcentajeDano();
 
     estadosSeleccionados = (d.estados || []).slice();
     ejemplaresPorEstado = Object.assign({}, d.ejemplares || {});
@@ -2211,6 +2354,9 @@
     var metodoTexto = (metodoPlagaActual === '__otro__')
       ? document.getElementById('pf-metodo-otro-texto').value
       : metodoPlagaActual;
+    var totalEstructuras = parseInt(document.getElementById('pf-total-estructuras').value, 10) || 0;
+    var estructurasDanadas = parseInt(document.getElementById('pf-estructuras-danadas').value, 10) || 0;
+    var porcentajeDano = totalEstructuras > 0 ? ((estructurasDanadas/totalEstructuras)*100).toFixed(1) : null;
     return {
       plaga: plagaActual.nombre,
       fecha: todayStr(),
@@ -2222,6 +2368,9 @@
       estructura: document.getElementById('pf-estructura').value,
       estados: estadosSeleccionados.slice(),
       ejemplares: Object.assign({}, ejemplaresPorEstado),
+      totalEstructuras: totalEstructuras,
+      estructurasDanadas: estructurasDanadas,
+      porcentajeDano: porcentajeDano,
       metodo: metodoTexto,
       obs: document.getElementById('pf-obs').value,
       foto: fotoPlagaDataUrl
@@ -2258,6 +2407,9 @@
           estructura: datos.estructura,
           estados: datos.estados.join(', '),
           ejemplares: datos.ejemplares,
+          total_estructuras: datos.totalEstructuras || null,
+          estructuras_danadas: datos.estructurasDanadas || null,
+          porcentaje_dano: datos.porcentajeDano || null,
           metodo: datos.metodo,
           foto_url: fotoUrl || null,
           observaciones: datos.obs || null
@@ -2291,8 +2443,8 @@
     }
   }
 
-  function construirInformePlagaPDF(){
-    var datos = datosFormularioPlagaActual();
+  function construirInformePlagaPDF(datosOverride){
+    var datos = datosOverride || datosFormularioPlagaActual();
     var doc = new window.jspdf.jsPDF({unit:'mm', format:'a4'});
     var pageW = doc.internal.pageSize.getWidth();
     var margin = 16;
@@ -2333,6 +2485,10 @@
       ? datos.estados.map(function(e){ return e + ' (' + (datos.ejemplares[e] || '0') + ')'; }).join('  ·  ')
       : '—';
     fila('Estado (N° ejemp.)', estadosTexto);
+    if(datos.totalEstructuras > 0){
+      fila('Estructuras revisadas', '' + datos.totalEstructuras);
+      fila('Con plaga/daño', datos.estructurasDanadas + ' (' + datos.porcentajeDano + '% de daño)');
+    }
     fila('Método', datos.metodo);
 
     if(datos.foto){
@@ -2384,32 +2540,226 @@
     return doc;
   }
 
-  function nombreArchivoInformePlaga(){
-    return 'Informe_' + plagaActual.nombre.replace(/\s+/g,'_') + '_' + todayStr() + '.pdf';
+  function nombreArchivoInformePlaga(datos){
+    return 'Informe_' + datos.plaga.replace(/\s+/g,'_') + '_' + datos.fecha + '.pdf';
   }
 
   function descargarInformePlaga(){
     if(!plagaActual) return;
-    var doc = construirInformePlagaPDF();
-    doc.save(nombreArchivoInformePlaga());
+    var datos = datosFormularioPlagaActual();
+    cargarImagenComoDataURL(datos.foto, function(fotoLista){
+      datos.foto = fotoLista;
+      var doc = construirInformePlagaPDF(datos);
+      doc.save(nombreArchivoInformePlaga(datos));
+    });
   }
 
   function compartirInformePlaga(){
     if(!plagaActual) return;
-    var doc = construirInformePlagaPDF();
-    var blob = doc.output('blob');
-    var file = new File([blob], nombreArchivoInformePlaga(), {type:'application/pdf'});
+    var datos = datosFormularioPlagaActual();
+    cargarImagenComoDataURL(datos.foto, function(fotoLista){
+      datos.foto = fotoLista;
+      var doc = construirInformePlagaPDF(datos);
+      var blob = doc.output('blob');
+      var file = new File([blob], nombreArchivoInformePlaga(datos), {type:'application/pdf'});
 
-    if(navigator.canShare && navigator.canShare({files:[file]})){
-      navigator.share({
-        files: [file],
-        title: 'Informe ' + plagaActual.nombre,
-        text: 'Informe de monitoreo de ' + plagaActual.nombre + ' · ' + formatFechaCorta(todayStr())
-      }).catch(function(){});
-    } else {
-      doc.save(nombreArchivoInformePlaga());
-      alert('Se descargó el informe en PDF. Este dispositivo no permite compartir el archivo directo, así que adjuntalo manualmente en el chat de WhatsApp.');
+      if(navigator.canShare && navigator.canShare({files:[file]})){
+        navigator.share({
+          files: [file],
+          title: 'Informe ' + datos.plaga,
+          text: 'Informe de monitoreo de ' + datos.plaga + ' · ' + formatFechaCorta(datos.fecha)
+        }).catch(function(){});
+      } else {
+        doc.save(nombreArchivoInformePlaga(datos));
+        alert('Se descargó el informe en PDF. Este dispositivo no permite compartir el archivo directo, así que adjuntalo manualmente en el chat de WhatsApp.');
+      }
+    });
+  }
+
+  function descargarInformePlagaHistorico(datos){
+    cargarImagenComoDataURL(datos.foto, function(fotoLista){
+      datos.foto = fotoLista;
+      var doc = construirInformePlagaPDF(datos);
+      doc.save(nombreArchivoInformePlaga(datos));
+    });
+  }
+
+  function compartirInformePlagaHistorico(datos){
+    cargarImagenComoDataURL(datos.foto, function(fotoLista){
+      datos.foto = fotoLista;
+      var doc = construirInformePlagaPDF(datos);
+      var blob = doc.output('blob');
+      var file = new File([blob], nombreArchivoInformePlaga(datos), {type:'application/pdf'});
+      if(navigator.canShare && navigator.canShare({files:[file]})){
+        navigator.share({
+          files: [file],
+          title: 'Informe ' + datos.plaga,
+          text: 'Informe de monitoreo de ' + datos.plaga + ' · ' + formatFechaCorta(datos.fecha)
+        }).catch(function(){});
+      } else {
+        doc.save(nombreArchivoInformePlaga(datos));
+        alert('Se descargó el informe en PDF. Este dispositivo no permite compartir el archivo directo, así que adjuntalo manualmente en el chat de WhatsApp.');
+      }
+    });
+  }
+  // ---- Informes (historial por fecha) ----
+  var informeHistoricoActual = null;
+
+  function showInformes(){
+    goTo('view-informes');
+    cargarInformesTrampas();
+    cargarInformesPlagas();
+  }
+
+  function setInformesTab(tab){
+    document.getElementById('inf-tab-trampas').classList.toggle('is-on', tab === 'trampas');
+    document.getElementById('inf-tab-plagas').classList.toggle('is-on', tab === 'plagas');
+    document.getElementById('panel-informes-trampas').classList.toggle('is-on', tab === 'trampas');
+    document.getElementById('panel-informes-plagas').classList.toggle('is-on', tab === 'plagas');
+  }
+
+  function cargarInformesTrampas(){
+    var panel = document.getElementById('panel-informes-trampas');
+    if(!sb){ panel.innerHTML = '<p class="foot-note" style="text-align:left;">Sin conexión a Supabase.</p>'; return; }
+
+    sb.from('ofm_monitoreos').select('fecha, trampa_num, cantidad').order('fecha', {ascending:false}).then(function(res){
+      if(res.error){
+        panel.innerHTML = '<p class="foot-note" style="text-align:left;">No se pudo cargar: ' + res.error.message + '</p>';
+        return;
+      }
+      var porFecha = {};
+      (res.data || []).forEach(function(row){
+        if(!porFecha[row.fecha]){ porFecha[row.fecha] = {trampas: {}, total: 0}; }
+        porFecha[row.fecha].trampas[row.trampa_num] = true;
+        porFecha[row.fecha].total += (parseInt(row.cantidad,10) || 0);
+      });
+      var fechas = Object.keys(porFecha).sort().reverse();
+      if(!fechas.length){
+        panel.innerHTML = '<p class="foot-note" style="text-align:left;">Todavía no hay informes de trampas guardados.</p>';
+        return;
+      }
+      panel.innerHTML = fechas.map(function(fecha){
+        var info = porFecha[fecha];
+        var nTrampas = Object.keys(info.trampas).length;
+        return '<div class="cambio-row" onclick="abrirInformeTrampasFecha(\'' + fecha + '\')">' +
+          '<span class="trap-num plaga-icono">📄</span>' +
+          '<span class="cambio-info">' +
+            '<p class="cambio-title">' + formatFechaCorta(fecha) + '</p>' +
+            '<p class="cambio-sub">' + nTrampas + ' trampas revisadas · ' + info.total + ' capturas</p>' +
+          '</span>' +
+          '<span class="option-chev" style="color:var(--ink-soft);"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg></span>' +
+        '</div>';
+      }).join('');
+    });
+  }
+
+  function abrirInformeTrampasFecha(fecha){
+    if(!sb) return;
+    sb.from('ofm_monitoreos').select('*').eq('fecha', fecha).order('created_at', {ascending:false}).then(function(res){
+      if(res.error){ alert('No se pudo cargar ese informe: ' + res.error.message); return; }
+      var mapa = {};
+      (res.data || []).forEach(function(row){
+        if(!mapa[row.trampa_num]){
+          mapa[row.trampa_num] = {
+            monitor: row.monitor,
+            fecha: row.fecha,
+            cantidad: row.cantidad,
+            foto: row.foto_url,
+            obs: row.observaciones
+          };
+        }
+      });
+      showResumen(fecha, mapa);
+    });
+  }
+
+  function cargarInformesPlagas(){
+    var panel = document.getElementById('panel-informes-plagas');
+    if(!sb){ panel.innerHTML = '<p class="foot-note" style="text-align:left;">Sin conexión a Supabase.</p>'; return; }
+
+    sb.from('plagas_monitoreos').select('*').order('fecha', {ascending:false}).order('created_at', {ascending:false}).limit(150).then(function(res){
+      if(res.error){
+        panel.innerHTML = '<p class="foot-note" style="text-align:left;">No se pudo cargar: ' + res.error.message + '</p>';
+        return;
+      }
+      var filas = res.data || [];
+      if(!filas.length){
+        panel.innerHTML = '<p class="foot-note" style="text-align:left;">Todavía no hay informes de plagas/enfermedades guardados.</p>';
+        return;
+      }
+      panel.innerHTML = filas.map(function(row, i){
+        var icono = ICONOS_PLAGAS[row.plaga] || ICONOS_ENFERMEDADES[row.plaga] || '🔎';
+        return '<div class="cambio-row" onclick="abrirInformePlagaHistorico(' + i + ')">' +
+          '<span class="trap-num plaga-icono">' + icono + '</span>' +
+          '<span class="cambio-info">' +
+            '<p class="cambio-title">' + row.plaga + ' · ' + formatFechaCorta(row.fecha) + '</p>' +
+            '<p class="cambio-sub">' + (row.campo||'—') + ' · Cuartel ' + (row.cuartel||'—') + '</p>' +
+          '</span>' +
+          '<span class="option-chev" style="color:var(--ink-soft);"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg></span>' +
+        '</div>';
+      }).join('');
+      window._informesPlagasRows = filas;
+    });
+  }
+
+  function abrirInformePlagaHistorico(indice){
+    var row = (window._informesPlagasRows || [])[indice];
+    if(!row) return;
+
+    var datos = {
+      plaga: row.plaga,
+      fecha: row.fecha,
+      monitor: row.monitor,
+      campo: row.campo,
+      cuartel: row.cuartel,
+      hileras: row.hileras,
+      variedad: row.variedad,
+      estructura: row.estructura,
+      estados: row.estados ? row.estados.split(',').map(function(s){ return s.trim(); }).filter(Boolean) : [],
+      ejemplares: row.ejemplares || {},
+      totalEstructuras: row.total_estructuras || 0,
+      estructurasDanadas: row.estructuras_danadas || 0,
+      porcentajeDano: row.porcentaje_dano || null,
+      metodo: row.metodo,
+      obs: row.observaciones,
+      foto: row.foto_url
+    };
+    informeHistoricoActual = datos;
+
+    document.getElementById('infd-titulo').textContent = datos.plaga;
+    document.getElementById('infd-sub').textContent = formatFechaCorta(datos.fecha) + ' · ' + (datos.campo||'—') + ' · Cuartel ' + (datos.cuartel||'—');
+
+    var estadosTexto = datos.estados.length
+      ? datos.estados.map(function(e){ return e + ' (' + (datos.ejemplares[e] || '0') + ')'; }).join(' · ')
+      : '—';
+
+    var html = '<div class="resumen-row" style="align-items:flex-start;">' +
+      '<span class="cambio-info">' +
+        '<p class="cambio-title">Monitor: ' + (datos.monitor||'—') + '</p>' +
+        '<p class="cambio-sub">Variedad: ' + (datos.variedad||'—') + ' · Hileras: ' + (datos.hileras||'—') + '</p>' +
+        '<p class="cambio-sub">Estructura: ' + (datos.estructura||'—') + '</p>' +
+        '<p class="cambio-sub">Estado (N° ejemp.): ' + estadosTexto + '</p>' +
+        (datos.totalEstructuras > 0 ? '<p class="cambio-sub">Daño: ' + datos.estructurasDanadas + ' de ' + datos.totalEstructuras + ' (' + datos.porcentajeDano + '%)</p>' : '') +
+        '<p class="cambio-sub">Método: ' + (datos.metodo||'—') + '</p>' +
+        (datos.obs ? '<p class="cambio-sub">Obs: ' + datos.obs + '</p>' : '') +
+      '</span>' +
+    '</div>';
+    if(datos.foto){
+      html += '<div style="margin-top:10px;"><img src="' + datos.foto + '" style="width:100%;max-width:220px;border-radius:12px;display:block;" alt="Foto"></div>';
     }
+
+    document.getElementById('panel-informe-detalle').innerHTML = html;
+    goTo('view-informe-plaga-detalle');
+  }
+
+  function descargarInformePlagaHistoricoActual(){
+    if(!informeHistoricoActual) return;
+    descargarInformePlagaHistorico(informeHistoricoActual);
+  }
+
+  function compartirInformePlagaHistoricoActual(){
+    if(!informeHistoricoActual) return;
+    compartirInformePlagaHistorico(informeHistoricoActual);
   }
 </script>
 
