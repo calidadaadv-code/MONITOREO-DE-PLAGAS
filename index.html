@@ -506,7 +506,7 @@
     </div>
   </section>
 
-  <!-- ---------- PANTALLA 2F: INFORMES (HISTORIAL POR FECHA) ---------- -->
+  <!-- ---------- PANTALLA 2F: INFORMES - TIPO ---------- -->
   <section class="view" id="view-informes">
     <div class="topbar">
       <button class="btn-back" type="button" onclick="goTo('view-seleccion')" aria-label="Volver">
@@ -516,18 +516,68 @@
     </div>
 
     <div class="content">
-      <h2 class="campo-heading">Informes anteriores</h2>
-      <p class="campo-sub">Se arman de nuevo con los datos ya guardados.</p>
+      <h2 class="sel-heading">Informes anteriores</h2>
+      <p class="sel-sub">Se arman de nuevo con los datos ya guardados.</p>
 
-      <div class="segmented">
-        <button id="inf-tab-trampas" class="is-on" type="button" onclick="setInformesTab('trampas')">Trampas OFM</button>
-        <button id="inf-tab-plagas" type="button" onclick="setInformesTab('plagas')">Plagas/Enferm.</button>
+      <div class="option-list">
+        <button class="option-card" type="button" onclick="showInformesTrampas()">
+          <span class="option-icon-vivid" style="background:rgba(255,255,255,0.92);width:44px;height:44px;font-size:21px;">🗺️</span>
+          <span class="option-text">
+            <p class="option-title">Revisión de trampas OFM</p>
+            <p class="option-sub">Informes diarios de monitoreo de trampas, por fecha</p>
+          </span>
+          <span class="option-chev">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+          </span>
+        </button>
+
+        <button class="option-card" type="button" onclick="showInformesPlagas()">
+          <span class="option-icon-vivid" style="background:rgba(255,255,255,0.92);width:44px;height:44px;font-size:21px;">🐛</span>
+          <span class="option-text">
+            <p class="option-title">Plagas y enfermedades</p>
+            <p class="option-sub">Informes de monitoreo por plaga/enfermedad, por fecha</p>
+          </span>
+          <span class="option-chev">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+          </span>
+        </button>
       </div>
+    </div>
+  </section>
+
+  <!-- ---------- PANTALLA 2F-1: INFORMES DE TRAMPAS OFM ---------- -->
+  <section class="view" id="view-informes-trampas">
+    <div class="topbar">
+      <button class="btn-back" type="button" onclick="goTo('view-informes')" aria-label="Volver">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+      </button>
+      <span class="topbar-label">Informes · Trampas OFM</span>
+    </div>
+
+    <div class="content">
+      <h2 class="campo-heading">Revisión de trampas OFM</h2>
+      <p class="campo-sub">Elegí una fecha para ver ese informe.</p>
 
       <div class="panel is-on" id="panel-informes-trampas" style="flex:1;overflow-y:auto;padding-bottom:20px;">
         <p class="foot-note" style="text-align:left;">Cargando…</p>
       </div>
-      <div class="panel" id="panel-informes-plagas" style="flex:1;overflow-y:auto;padding-bottom:20px;">
+    </div>
+  </section>
+
+  <!-- ---------- PANTALLA 2F-2: INFORMES DE PLAGAS Y ENFERMEDADES ---------- -->
+  <section class="view" id="view-informes-plagas">
+    <div class="topbar">
+      <button class="btn-back" type="button" onclick="goTo('view-informes')" aria-label="Volver">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+      </button>
+      <span class="topbar-label">Informes · Plagas y enfermedades</span>
+    </div>
+
+    <div class="content">
+      <h2 class="campo-heading">Plagas y enfermedades</h2>
+      <p class="campo-sub">Elegí un registro para ver ese informe.</p>
+
+      <div class="panel is-on" id="panel-informes-plagas" style="flex:1;overflow-y:auto;padding-bottom:20px;">
         <p class="foot-note" style="text-align:left;">Cargando…</p>
       </div>
     </div>
@@ -536,7 +586,7 @@
   <!-- ---------- PANTALLA 2G: DETALLE DE UN INFORME DE PLAGA HISTÓRICO ---------- -->
   <section class="view" id="view-informe-plaga-detalle">
     <div class="topbar">
-      <button class="btn-back" type="button" onclick="goTo('view-informes')" aria-label="Volver">
+      <button class="btn-back" type="button" onclick="goTo('view-informes-plagas')" aria-label="Volver">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
       </button>
       <span class="topbar-label">Informes · Plagas</span>
@@ -2607,15 +2657,16 @@
 
   function showInformes(){
     goTo('view-informes');
-    cargarInformesTrampas();
-    cargarInformesPlagas();
   }
 
-  function setInformesTab(tab){
-    document.getElementById('inf-tab-trampas').classList.toggle('is-on', tab === 'trampas');
-    document.getElementById('inf-tab-plagas').classList.toggle('is-on', tab === 'plagas');
-    document.getElementById('panel-informes-trampas').classList.toggle('is-on', tab === 'trampas');
-    document.getElementById('panel-informes-plagas').classList.toggle('is-on', tab === 'plagas');
+  function showInformesTrampas(){
+    goTo('view-informes-trampas');
+    cargarInformesTrampas();
+  }
+
+  function showInformesPlagas(){
+    goTo('view-informes-plagas');
+    cargarInformesPlagas();
   }
 
   function cargarInformesTrampas(){
