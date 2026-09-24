@@ -755,13 +755,7 @@
 
       <div class="field">
         <label>Estado de la plaga</label>
-        <div class="estado-grid">
-          <button type="button" class="estado-btn" data-estado="Huevo" onclick="toggleEstado('Huevo')">Huevo</button>
-          <button type="button" class="estado-btn" data-estado="Larva" onclick="toggleEstado('Larva')">Larva</button>
-          <button type="button" class="estado-btn" data-estado="Pupa" onclick="toggleEstado('Pupa')">Pupa</button>
-          <button type="button" class="estado-btn" data-estado="Ninfa" onclick="toggleEstado('Ninfa')">Ninfa</button>
-          <button type="button" class="estado-btn" data-estado="Adulto" onclick="toggleEstado('Adulto')">Adulto</button>
-        </div>
+        <div class="estado-grid" id="pf-estado-grid"></div>
       </div>
 
       <div class="field" id="pf-ejemplares-wrap" style="display:none;">
@@ -769,19 +763,29 @@
         <div id="pf-ejemplares-inputs"></div>
       </div>
 
+      <div class="field">
+        <label for="pf-total-estructuras">Total estructuras revisadas</label>
+        <input type="number" min="0" id="pf-total-estructuras" placeholder="0" oninput="calcularPorcentajeDano()">
+      </div>
       <div class="field-row">
         <div class="field">
-          <label for="pf-total-estructuras">Total estructuras revisadas</label>
-          <input type="number" min="0" id="pf-total-estructuras" placeholder="0" oninput="calcularPorcentajeDano()">
-        </div>
-        <div class="field">
-          <label for="pf-estructuras-danadas">N° con plaga/daño</label>
+          <label for="pf-estructuras-danadas">N° con daño</label>
           <input type="number" min="0" id="pf-estructuras-danadas" placeholder="0" oninput="calcularPorcentajeDano()">
         </div>
+        <div class="field">
+          <label for="pf-estructuras-plaga">N° con plaga</label>
+          <input type="number" min="0" id="pf-estructuras-plaga" placeholder="0" oninput="calcularPorcentajeDano()">
+        </div>
       </div>
-      <div class="field">
-        <label>% de daño</label>
-        <input type="text" id="pf-porcentaje-dano" readonly placeholder="Se calcula solo" style="background:#F0EEE4;color:var(--ink-soft);">
+      <div class="field-row">
+        <div class="field">
+          <label>% de daño</label>
+          <input type="text" id="pf-porcentaje-dano" readonly placeholder="Se calcula solo" style="background:#F0EEE4;color:var(--ink-soft);">
+        </div>
+        <div class="field">
+          <label>% de plaga</label>
+          <input type="text" id="pf-porcentaje-plaga" readonly placeholder="Se calcula solo" style="background:#F0EEE4;color:var(--ink-soft);">
+        </div>
       </div>
 
       <div class="field">
@@ -2259,7 +2263,23 @@
     guardarBorradorPlagaActual();
   }
 
-  var ESTADOS_PLAGA = ['Huevo','Larva','Pupa','Ninfa','Adulto'];
+  var ESTADOS_PLAGA_DEFAULT = ['Huevo','Larva','Pupa','Ninfa','Adulto'];
+  var ESTADOS_POR_PLAGA = {
+    'Chanchito blanco': ['Huevo','Ninfa 1','Ninfa 2','Ninfa 3','Adulto']
+  };
+
+  function estadosParaPlagaActual(){
+    if(plagaActual && ESTADOS_POR_PLAGA[plagaActual.nombre]) return ESTADOS_POR_PLAGA[plagaActual.nombre];
+    return ESTADOS_PLAGA_DEFAULT;
+  }
+
+  function renderEstadoButtons(){
+    var grid = document.getElementById('pf-estado-grid');
+    var estados = estadosParaPlagaActual();
+    grid.innerHTML = estados.map(function(estado){
+      return '<button type="button" class="estado-btn" data-estado="' + estado + '" onclick="toggleEstado(\'' + estado + '\')">' + estado + '</button>';
+    }).join('');
+  }
 
   function toggleEstado(estado){
     var idx = estadosSeleccionados.indexOf(estado);
@@ -2312,12 +2332,15 @@
   function calcularPorcentajeDano(){
     var total = parseInt(document.getElementById('pf-total-estructuras').value, 10) || 0;
     var danadas = parseInt(document.getElementById('pf-estructuras-danadas').value, 10) || 0;
-    var out = document.getElementById('pf-porcentaje-dano');
+    var plagadas = parseInt(document.getElementById('pf-estructuras-plaga').value, 10) || 0;
+    var outDano = document.getElementById('pf-porcentaje-dano');
+    var outPlaga = document.getElementById('pf-porcentaje-plaga');
     if(total > 0){
-      var pct = (danadas / total) * 100;
-      out.value = pct.toFixed(1) + '%';
+      outDano.value = ((danadas / total) * 100).toFixed(1) + '%';
+      outPlaga.value = ((plagadas / total) * 100).toFixed(1) + '%';
     } else {
-      out.value = '';
+      outDano.value = '';
+      outPlaga.value = '';
     }
     guardarBorradorPlagaActual();
   }
@@ -2336,6 +2359,7 @@
       ejemplares: Object.assign({}, ejemplaresPorEstado),
       totalEstructuras: document.getElementById('pf-total-estructuras').value,
       estructurasDanadas: document.getElementById('pf-estructuras-danadas').value,
+      estructurasPlaga: document.getElementById('pf-estructuras-plaga').value,
       metodo: metodoPlagaActual,
       metodoOtroTexto: document.getElementById('pf-metodo-otro-texto').value,
       obs: document.getElementById('pf-obs').value,
@@ -2371,11 +2395,13 @@
     document.getElementById('pf-metodo-otro-texto').value = d.metodoOtroTexto || '';
     document.getElementById('pf-total-estructuras').value = d.totalEstructuras || '';
     document.getElementById('pf-estructuras-danadas').value = d.estructurasDanadas || '';
+    document.getElementById('pf-estructuras-plaga').value = d.estructurasPlaga || '';
     calcularPorcentajeDano();
 
+    renderEstadoButtons();
     estadosSeleccionados = (d.estados || []).slice();
     ejemplaresPorEstado = Object.assign({}, d.ejemplares || {});
-    ESTADOS_PLAGA.forEach(function(estado){
+    estadosParaPlagaActual().forEach(function(estado){
       document.querySelector('.estado-btn[data-estado="'+estado+'"]').classList.toggle('is-on', estadosSeleccionados.indexOf(estado) !== -1);
     });
     renderEjemplaresInputs();
@@ -2406,7 +2432,9 @@
       : metodoPlagaActual;
     var totalEstructuras = parseInt(document.getElementById('pf-total-estructuras').value, 10) || 0;
     var estructurasDanadas = parseInt(document.getElementById('pf-estructuras-danadas').value, 10) || 0;
+    var estructurasPlaga = parseInt(document.getElementById('pf-estructuras-plaga').value, 10) || 0;
     var porcentajeDano = totalEstructuras > 0 ? ((estructurasDanadas/totalEstructuras)*100).toFixed(1) : null;
+    var porcentajePlaga = totalEstructuras > 0 ? ((estructurasPlaga/totalEstructuras)*100).toFixed(1) : null;
     return {
       plaga: plagaActual.nombre,
       fecha: todayStr(),
@@ -2420,7 +2448,9 @@
       ejemplares: Object.assign({}, ejemplaresPorEstado),
       totalEstructuras: totalEstructuras,
       estructurasDanadas: estructurasDanadas,
+      estructurasPlaga: estructurasPlaga,
       porcentajeDano: porcentajeDano,
+      porcentajePlaga: porcentajePlaga,
       metodo: metodoTexto,
       obs: document.getElementById('pf-obs').value,
       foto: fotoPlagaDataUrl
@@ -2459,7 +2489,9 @@
           ejemplares: datos.ejemplares,
           total_estructuras: datos.totalEstructuras || null,
           estructuras_danadas: datos.estructurasDanadas || null,
+          estructuras_plaga: datos.estructurasPlaga || null,
           porcentaje_dano: datos.porcentajeDano || null,
+          porcentaje_plaga: datos.porcentajePlaga || null,
           metodo: datos.metodo,
           foto_url: fotoUrl || null,
           observaciones: datos.obs || null
@@ -2537,7 +2569,8 @@
     fila('Estado (N° ejemp.)', estadosTexto);
     if(datos.totalEstructuras > 0){
       fila('Estructuras revisadas', '' + datos.totalEstructuras);
-      fila('Con plaga/daño', datos.estructurasDanadas + ' (' + datos.porcentajeDano + '% de daño)');
+      fila('Con daño', datos.estructurasDanadas + ' (' + datos.porcentajeDano + '% de daño)');
+      fila('Con plaga', datos.estructurasPlaga + ' (' + datos.porcentajePlaga + '% de plaga)');
     }
     fila('Método', datos.metodo);
 
@@ -2770,7 +2803,9 @@
       ejemplares: row.ejemplares || {},
       totalEstructuras: row.total_estructuras || 0,
       estructurasDanadas: row.estructuras_danadas || 0,
+      estructurasPlaga: row.estructuras_plaga || 0,
       porcentajeDano: row.porcentaje_dano || null,
+      porcentajePlaga: row.porcentaje_plaga || null,
       metodo: row.metodo,
       obs: row.observaciones,
       foto: row.foto_url
@@ -2790,7 +2825,7 @@
         '<p class="cambio-sub">Variedad: ' + (datos.variedad||'—') + ' · Hileras: ' + (datos.hileras||'—') + '</p>' +
         '<p class="cambio-sub">Estructura: ' + (datos.estructura||'—') + '</p>' +
         '<p class="cambio-sub">Estado (N° ejemp.): ' + estadosTexto + '</p>' +
-        (datos.totalEstructuras > 0 ? '<p class="cambio-sub">Daño: ' + datos.estructurasDanadas + ' de ' + datos.totalEstructuras + ' (' + datos.porcentajeDano + '%)</p>' : '') +
+        (datos.totalEstructuras > 0 ? '<p class="cambio-sub">Daño: ' + datos.estructurasDanadas + ' de ' + datos.totalEstructuras + ' (' + datos.porcentajeDano + '%) · Plaga: ' + datos.estructurasPlaga + ' de ' + datos.totalEstructuras + ' (' + datos.porcentajePlaga + '%)</p>' : '') +
         '<p class="cambio-sub">Método: ' + (datos.metodo||'—') + '</p>' +
         (datos.obs ? '<p class="cambio-sub">Obs: ' + datos.obs + '</p>' : '') +
       '</span>' +
