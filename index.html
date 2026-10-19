@@ -783,7 +783,7 @@
           <input type="text" id="pf-porcentaje-dano" readonly placeholder="Se calcula solo" style="background:#F0EEE4;color:var(--ink-soft);">
         </div>
         <div class="field">
-          <label>% de plaga</label>
+          <label>Presión de plaga</label>
           <input type="text" id="pf-porcentaje-plaga" readonly placeholder="Se calcula solo" style="background:#F0EEE4;color:var(--ink-soft);">
         </div>
       </div>
@@ -2337,12 +2337,17 @@
     var outPlaga = document.getElementById('pf-porcentaje-plaga');
     if(total > 0){
       outDano.value = ((danadas / total) * 100).toFixed(1) + '%';
-      outPlaga.value = ((plagadas / total) * 100).toFixed(1) + '%';
+      outPlaga.value = formatPresionPlaga(plagadas / total);
     } else {
       outDano.value = '';
       outPlaga.value = '';
     }
     guardarBorradorPlagaActual();
+  }
+
+  function formatPresionPlaga(valor){
+    var redondeado = Math.round(valor * 100) / 100;
+    return redondeado % 1 === 0 ? String(redondeado) : redondeado.toFixed(2);
   }
 
   function guardarBorradorPlagaActual(){
@@ -2434,7 +2439,7 @@
     var estructurasDanadas = parseInt(document.getElementById('pf-estructuras-danadas').value, 10) || 0;
     var estructurasPlaga = parseInt(document.getElementById('pf-estructuras-plaga').value, 10) || 0;
     var porcentajeDano = totalEstructuras > 0 ? ((estructurasDanadas/totalEstructuras)*100).toFixed(1) : null;
-    var porcentajePlaga = totalEstructuras > 0 ? ((estructurasPlaga/totalEstructuras)*100).toFixed(1) : null;
+    var porcentajePlaga = totalEstructuras > 0 ? formatPresionPlaga(estructurasPlaga/totalEstructuras) : null;
     return {
       plaga: plagaActual.nombre,
       fecha: todayStr(),
@@ -2570,7 +2575,7 @@
     if(datos.totalEstructuras > 0){
       fila('Estructuras revisadas', '' + datos.totalEstructuras);
       fila('Con daño', datos.estructurasDanadas + ' (' + datos.porcentajeDano + '% de daño)');
-      fila('Con plaga', datos.estructurasPlaga + ' (' + datos.porcentajePlaga + '% de plaga)');
+      fila('Con plaga', datos.estructurasPlaga + ' (presión de plaga: ' + datos.porcentajePlaga + ')');
     }
     fila('Método', datos.metodo);
 
@@ -2825,7 +2830,7 @@
         '<p class="cambio-sub">Variedad: ' + (datos.variedad||'—') + ' · Hileras: ' + (datos.hileras||'—') + '</p>' +
         '<p class="cambio-sub">Estructura: ' + (datos.estructura||'—') + '</p>' +
         '<p class="cambio-sub">Estado (N° ejemp.): ' + estadosTexto + '</p>' +
-        (datos.totalEstructuras > 0 ? '<p class="cambio-sub">Daño: ' + datos.estructurasDanadas + ' de ' + datos.totalEstructuras + ' (' + datos.porcentajeDano + '%) · Plaga: ' + datos.estructurasPlaga + ' de ' + datos.totalEstructuras + ' (' + datos.porcentajePlaga + '%)</p>' : '') +
+        (datos.totalEstructuras > 0 ? '<p class="cambio-sub">Daño: ' + datos.estructurasDanadas + ' de ' + datos.totalEstructuras + ' (' + datos.porcentajeDano + '%) · Plaga: ' + datos.estructurasPlaga + ' de ' + datos.totalEstructuras + ' (presión: ' + datos.porcentajePlaga + ')</p>' : '') +
         '<p class="cambio-sub">Método: ' + (datos.metodo||'—') + '</p>' +
         (datos.obs ? '<p class="cambio-sub">Obs: ' + datos.obs + '</p>' : '') +
       '</span>' +
